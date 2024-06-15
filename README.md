@@ -27,6 +27,7 @@ TBD
 We conduct a two-stage training: The first stage is pre-training on human-centric caption and grounding tasks, and the second stage is instruction tuning on free-style human-centric question-answering pairs.
 
 - Stage 1: Pre-training
+Set your configurations in `train_configs/hcm_multitask/minigptv2_hcm_multitask.yaml`.
 ```sh
 CUDA_VISIBLE_DEVICES=<your device numbers> torchrun \
   --master_port <your port> --nproc_per_node <your process numbers> \
@@ -38,7 +39,9 @@ CUDA_VISIBLE_DEVICES=<your device numbers> torchrun \
   --master_port <your port> --nproc_per_node <your process numbers> \
   train.py --cfg-path train_configs/hcm_multitask/minigptv2_hcm_instruct_tuning.yaml
 ```
+Both single-gpu and multi-gpu training is supported.
 
 ## Inference
+We 
 
 ## Citation
