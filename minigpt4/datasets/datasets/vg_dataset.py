@@ -23,6 +23,7 @@ class ReferVisualGenomeDataset(Dataset):
 
         self.vis_processor = vis_processor
         self.text_processor = text_processor
+        self.quantize_bins = self.text_processor.quantize_bins
 
         all_regions = local.get_all_region_descriptions(self.data_dir)
         all_regions = [region for regions in all_regions for region in regions]
@@ -52,7 +53,7 @@ class ReferVisualGenomeDataset(Dataset):
         image = Image.open(image_path).convert("RGB")
         image_orig_size = image.size
         image = self.vis_processor(image)
-        image_new_size = [100,100]
+        image_new_size = [self.quantize_bins, self.quantize_bins]
 
         sample_sentence = region.phrase
         refer_sentence = self.text_processor(sample_sentence)

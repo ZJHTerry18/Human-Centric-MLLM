@@ -13,6 +13,7 @@ from minigpt4.datasets.datasets.multitask_conversation import MultiTaskConversat
 from minigpt4.datasets.datasets.flickr import GroundedDetailDataset,CaptionToObjectDataset,PhraseToObjectDataset
 from minigpt4.datasets.datasets.vg_dataset import ReferVisualGenomeDataset
 from minigpt4.datasets.datasets.coco_dataset import ReferCOCODataset, InvReferCOCODataset
+from minigpt4.datasets.datasets.coco_seg_dataset import ReferCOCOSegDataset, InvReferCOCOSegDataset
 from minigpt4.datasets.datasets.gqa_datasets import GQADataset
 from minigpt4.datasets.datasets.aok_vqa_datasets import AOKVQADataset
 from minigpt4.datasets.datasets.coco_vqa_datasets import COCOVQADataset
@@ -226,6 +227,49 @@ class RefCOCOGBuilder(AllRefCOCOBuilder):
         "default": "configs/datasets/coco_bbox/invrefcocog.yaml",
     }
 
+@registry.register_builder("refcoco_seg")
+class RefCOCOSegBuilder(AllRefCOCOBuilder):
+    train_dataset_cls = ReferCOCOSegDataset
+    DATASET_CONFIG_DICT = {
+        "default": "configs/datasets/coco_seg/refcoco.yaml",
+    }
+
+@registry.register_builder("refcocop_seg")
+class RefCOCOPSegBuilder(AllRefCOCOBuilder):
+    train_dataset_cls = ReferCOCOSegDataset
+    DATASET_CONFIG_DICT = {
+        "default": "configs/datasets/coco_seg/refcocop.yaml",
+    }
+
+@registry.register_builder("refcocog_seg")
+class RefCOCOGSegBuilder(AllRefCOCOBuilder):
+    train_dataset_cls = ReferCOCOSegDataset
+    DATASET_CONFIG_DICT = {
+        "default": "configs/datasets/coco_seg/refcocog.yaml",
+    }
+
+@registry.register_builder("invrefcoco_seg")
+class InvRefCOCOSegBuilder(AllRefCOCOBuilder):
+    train_dataset_cls = InvReferCOCOSegDataset
+    DATASET_CONFIG_DICT = {
+        "default": "configs/datasets/coco_seg/invrefcoco.yaml",
+    }
+
+@registry.register_builder("invrefcocop_seg")
+class InvRefCOCOPSegBuilder(AllRefCOCOBuilder):
+    train_dataset_cls = InvReferCOCOSegDataset
+    DATASET_CONFIG_DICT = {
+        "default": "configs/datasets/coco_seg/invrefcocop.yaml",
+    }
+
+@registry.register_builder("invrefcocog_seg")
+class InvRefCOCOGSegBuilder(AllRefCOCOBuilder):
+    train_dataset_cls = InvReferCOCOSegDataset
+    DATASET_CONFIG_DICT = {
+        "default": "configs/datasets/coco_seg/invrefcocog.yaml",
+    }
+
+
 @registry.register_builder("refvg")
 class RefVisualGenomeBuilder(BaseDatasetBuilder):
     train_dataset_cls = ReferVisualGenomeDataset
@@ -369,7 +413,7 @@ class CaptionToPhraseBuilder(BaseDatasetBuilder):
         return datasets
 
 @registry.register_builder("flickr_ObjectToPhrase")
-class CaptionToPhraseBuilder(BaseDatasetBuilder):
+class ObjectToPhraseBuilder(BaseDatasetBuilder):
     train_dataset_cls = PhraseToObjectDataset
     DATASET_CONFIG_DICT = {
         "default": "configs/datasets/flickr/object_to_phrase.yaml",

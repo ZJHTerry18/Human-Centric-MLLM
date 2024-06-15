@@ -1,0 +1,15 @@
+datasets:
+  invrefcoco_seg:
+    data_type: images
+    vis_processor:
+      train:
+        name: "blip2_image_train"
+        image_size: 448
+    text_processor:
+      train:
+        name: "blip_caption"
+    build_info:
+      image_path: /data/datasets/dataset_ref/coco2014/images/train
+      ann_path: annotation_files/refcoco_annotations
+      dataset: invrefcoco
+      splitBy: unc

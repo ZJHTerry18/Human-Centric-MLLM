@@ -16,7 +16,7 @@ import wandb
 
 import minigpt4.tasks as tasks
 from minigpt4.common.config import Config
-from minigpt4.common.dist_utils import get_rank, init_distributed_mode
+from minigpt4.common.dist_utils import get_rank, init_distributed_mode, setup_for_distributed
 from minigpt4.common.logger import setup_logger
 from minigpt4.common.optims import (
     LinearWarmupCosineLRScheduler,
@@ -32,6 +32,7 @@ from minigpt4.processors import *
 from minigpt4.runners import *
 from minigpt4.tasks import *
 
+# import deepspeed
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Training")
@@ -77,7 +78,8 @@ def main():
     job_id = now()
     args = parse_args()
     cfg = Config(args)
-
+    runner_name = cfg.run_cfg.get("runner")
+    
     init_distributed_mode(cfg.run_cfg)
     setup_seeds(cfg)
 
@@ -94,9 +96,22 @@ def main():
         wandb.init(project="minigptv", name=cfg.run_cfg.job_name)
         wandb.watch(model)
 
-    runner = get_runner_class(cfg)(
-        cfg=cfg, job_id=job_id, task=task, model=model, datasets=datasets
-    )
+    
+    if runner_name in ["runner_base_ds"] :
+        ds_params = dict(cfg.deepspeed_cfg)
+        
+        ds_engine, _, _, _ = deepspeed.initialize(
+                                            model=model,
+                                            model_parameters=model.parameters(),
+                                            config_params=ds_params,
+                                            dist_init_required=True)
+
+        runner = get_runner_class(cfg)(
+        cfg=cfg, job_id=job_id, task=task, ds_engine=ds_engine, datasets=datasets)
+    else:
+        runner = get_runner_class(cfg)(
+            cfg=cfg, job_id=job_id, task=task, model=model, datasets=datasets
+        )
     runner.train()
 
 

@@ -8,6 +8,14 @@ datasets:
     # data_dir: ${env.data_dir}/datasets
     data_type: images # [images|videos|features]
 
+    vis_processor:
+      train:
+        name: "blip2_image_train"
+        image_size: 448
+    text_processor:
+      train:
+        name: "blip_caption"
+
     build_info:
 
       annotations:
@@ -16,9 +24,9 @@ datasets:
               - https://storage.googleapis.com/sfr-vision-language-research/LAVIS/datasets/vqav2/vqa_train.json
               - https://storage.googleapis.com/sfr-vision-language-research/LAVIS/datasets/vqav2/vqa_val.json
           storage:
-              - /path/to/vqav2/vqa_train.json
-              - /path/to/vqav2/vqa_val.json
+              - minigptv2_json/vqa_train.json
+              - minigptv2_json/vqa_val.json
       images:
-          storage: /path/to/coco/images
+          storage: /data/datasets/dataset_ref/coco2014/images
 
   

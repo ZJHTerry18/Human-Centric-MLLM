@@ -27,9 +27,10 @@ class BlipImageBaseProcessor(BaseProcessor):
 
 @registry.register_processor("blip_caption")
 class BlipCaptionProcessor(BaseProcessor):
-    def __init__(self, prompt="", max_words=50):
+    def __init__(self, prompt="", max_words=50, quantize_bins=100):
         self.prompt = prompt
         self.max_words = max_words
+        self.quantize_bins = quantize_bins
 
     def __call__(self, caption):
         caption = self.prompt + self.pre_caption(caption)
@@ -43,8 +44,9 @@ class BlipCaptionProcessor(BaseProcessor):
 
         prompt = cfg.get("prompt", "")
         max_words = cfg.get("max_words", 50)
+        quantize_bins = cfg.get("quantize_bins", 100)
 
-        return cls(prompt=prompt, max_words=max_words)
+        return cls(prompt=prompt, max_words=max_words, quantize_bins=quantize_bins)
 
     def pre_caption(self, caption):
         caption = re.sub(
@@ -126,6 +128,77 @@ class Blip2ImageEvalProcessor(BlipImageBaseProcessor):
 
     def __call__(self, item):
         return self.transform(item)
+
+    @classmethod
+    def from_config(cls, cfg=None):
+        if cfg is None:
+            cfg = OmegaConf.create()
+
+        image_size = cfg.get("image_size", 224)
+
+        mean = cfg.get("mean", None)
+        std = cfg.get("std", None)
+
+        return cls(image_size=image_size, mean=mean, std=std)
+
+@registry.register_processor("blip2_image_multitask_train")
+class Blip2ImageMultitaskTrainProcessor(BlipImageBaseProcessor):
+    def __init__(self, image_size=224, mean=None, std=None, min_scale=0.5, max_scale=1.0):
+        super().__init__(mean=mean, std=std)
+
+        self.transform = transforms.Compose(
+            [
+                transforms.Resize(
+                    (image_size,image_size),
+                    interpolation=InterpolationMode.BICUBIC,
+                ),
+                transforms.ToTensor(),
+                self.normalize,
+            ]
+        )
+
+    def __call__(self, image, target):
+        return self.transform(image), target
+
+    @classmethod
+    def from_config(cls, cfg=None):
+        if cfg is None:
+            cfg = OmegaConf.create()
+
+        image_size = cfg.get("image_size", 224)
+
+        mean = cfg.get("mean", None)
+        std = cfg.get("std", None)
+
+        min_scale = cfg.get("min_scale", 0.5)
+        max_scale = cfg.get("max_scale", 1.0)
+
+        return cls(
+            image_size=image_size,
+            mean=mean,
+            std=std,
+            min_scale=min_scale,
+            max_scale=max_scale,
+        )
+
+
+@registry.register_processor("blip2_image_multitask_eval")
+class Blip2ImageMultitaskEvalProcessor(BlipImageBaseProcessor):
+    def __init__(self, image_size=224, mean=None, std=None):
+        super().__init__(mean=mean, std=std)
+
+        self.transform = transforms.Compose(
+            [
+                transforms.Resize(
+                    (image_size, image_size), interpolation=InterpolationMode.BICUBIC
+                ),
+                transforms.ToTensor(),
+                self.normalize,
+            ]
+        )
+
+    def __call__(self, image, target):
+        return self.transform(image), target
 
     @classmethod
     def from_config(cls, cfg=None):

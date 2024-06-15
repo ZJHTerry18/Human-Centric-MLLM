@@ -42,6 +42,9 @@ class MiniGPTv2(MiniGPTBase):
             max_context_len=3800,
             low_resource=False,  # use 8 bit and put vit in cpu
             device_8bit=0,  # the device of 8bit model should be set when loading and cannot be changed anymore.
+            half_freeze=False,
+            tune_posembed=False,
+            use_vit_adapter=False
     ):
         super().__init__(
             vit_model=vit_model,
@@ -61,6 +64,9 @@ class MiniGPTv2(MiniGPTBase):
             lora_target_modules=lora_target_modules,
             lora_alpha=lora_alpha,
             lora_dropout=lora_dropout,
+            half_freeze=half_freeze,
+            tune_posembed=tune_posembed,
+            use_vit_adapter=use_vit_adapter
         )
 
         img_f_dim = self.visual_encoder.num_features * 4
@@ -111,6 +117,10 @@ class MiniGPTv2(MiniGPTBase):
         use_grad_checkpoint_llm = cfg.get("use_grad_checkpoint_llm", False)
         max_context_len = cfg.get("max_context_len", 3800)
 
+        half_freeze = cfg.get("half_freeze", False)
+        tune_posembed = cfg.get("tune_posembed", False)
+        use_vit_adapter= cfg.get("use_vit_adapter", False)
+
         model = cls(
             vit_model=vit_model,
             img_size=img_size,
@@ -128,6 +138,9 @@ class MiniGPTv2(MiniGPTBase):
             chat_template=chat_template,
             use_grad_checkpoint_llm=use_grad_checkpoint_llm,
             max_context_len=max_context_len,
+            half_freeze=half_freeze,
+            tune_posembed=tune_posembed,
+            use_vit_adapter=use_vit_adapter
         )
 
         ckpt_path = cfg.get("ckpt", "")  # load weights of MiniGPT-4

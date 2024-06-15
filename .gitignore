@@ -182,3 +182,10 @@ sbatch_generate*
 eval_data/
 dataset/Evaluation.md
 jupyter_notebook.slurm
+
+pretrained_models
+debug/
+annotation_files/
+checkpoints/
+inference_cases/
+minigptv2_json/

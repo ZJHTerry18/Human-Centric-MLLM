@@ -1,0 +1,37 @@
+datasets:
+  grit_grounding:
+    data_type: images
+    vis_processor:
+      train:
+        name: "blip2_image_multitask_train"
+        image_size: 448
+    text_processor:
+      train:
+        name: "blip2_text_instground_train"
+    build_info:
+      image_path: /home/human/data/GRIT/grit_images
+      ann_path:
+        train: [
+          '/home/human/data/GRIT/grit_annotations/grit_0_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_1_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_2_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_3_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_4_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_5_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_6_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_7_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_8_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_9_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_10_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_11_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_12_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_13_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_14_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_15_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_16_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_17_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_18_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_19_grounding_annotations.jsonl',
+          '/home/human/data/GRIT/grit_annotations/grit_20_grounding_annotations.jsonl',
+        ]
+      template_path: minigpt4/configs/datasets/grit/grounding_template.json

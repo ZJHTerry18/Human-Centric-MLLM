@@ -1,0 +1,116 @@
+model:
+  arch: minigpt_v2
+  model_type: pretrain
+  max_txt_len: 1024
+  image_size: 448
+  end_sym: "</s>"
+  llama_model: "pretrained_models/language_models/llama-2-7b-chat"
+  ckpt: "checkpoints/minigptv2/checkpoint_stage2.pth"
+  use_grad_checkpoint: True
+  chat_template: True
+  low_resource: False
+  lora_r: 64
+  lora_alpha: 16
+
+datasets:
+### ---parsing---
+  cihp_parsing_qa:
+    task: parsing
+    batch_size: 1
+    sample_ratio: 24
+    vis_processor:
+      train:
+        data_cfg:
+          is_flip: False
+    text_processor:
+      train:
+        sample_p: 0.5
+    build_info:
+      ann_path:
+        train: /data/datasets/dataset_parsing/CIHP/instance-level_human_parsing/CIHP_train_polygon_bbox.jsonl
+  
+  lip_parsing_qa:
+    task: parsing
+    batch_size: 1
+    sample_ratio: 14
+    vis_processor:
+      train:
+        data_cfg:
+          is_flip: False
+    text_processor:
+      train:
+        sample_p: 0.5
+    build_info:
+      ann_path:
+        train: /data/datasets/dataset_parsing/LIP/TrainVal_parsing_annotations/LIP_train_polygon_bbox.jsonl
+  
+  vip_parsing_qa:
+    task: parsing
+    batch_size: 1
+    sample_ratio: 18
+    vis_processor:
+      train:
+        data_cfg:
+          is_flip: False
+    text_processor:
+      train:
+        sample_p: 0.5
+    build_info:
+      ann_path:
+        train: /data/datasets/dataset_parsing/VIP_new/VIP_Fine/annotations/VIP_train_polygon_bbox.jsonl
+  
+  deepfashion2_parsing_qa:
+    task: parsing
+    batch_size: 1
+    sample_ratio: 34
+    vis_processor:
+      train:
+        data_cfg:
+          is_flip: False
+    text_processor:
+      train:
+        sample_p: 0.5
+    build_info:
+      ann_path:
+        train: /data/datasets/dataset_parsing/DeepFashion2/deepfashion2_train_polygon_bbox.jsonl
+  
+  # # NOT USED FOR TRAINING. dataset need to be checked. 
+  # modanet_parsing_qa: 
+  #   task: parsing
+  #   batch_size: 1
+  #   # modanet validation set has no annotations
+  
+
+run:
+  task: image_text_pretrain
+  # optimizer
+  lr_sched: "linear_warmup_cosine_lr"
+  init_lr: 1e-5
+  min_lr: 1e-6
+  warmup_lr: 1e-6
+  accum_grad_iters: 24
+
+  weight_decay: 0.05
+  max_epoch: 100
+  num_workers: 6
+  warmup_steps: 1000
+  iters_per_epoch: 5000
+  epochs_per_save: 10
+
+  seed: 42
+  output_dir: "output/Parsing_eva-G_llama2"
+
+  amp: True
+  resume_ckpt_path: null
+
+  evaluate: False 
+  train_splits: ["train"]
+  valid_splits: []
+
+  device: "cuda"
+  world_size: 1
+  dist_url: "env://"
+  distributed: True
+
+  wandb_log: False
+  job_name: multitask_qa

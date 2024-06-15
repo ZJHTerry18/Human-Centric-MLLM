@@ -14,6 +14,7 @@ from minigpt4.models.base_model import BaseModel
 from minigpt4.models.minigpt_base import MiniGPTBase
 from minigpt4.models.minigpt4 import MiniGPT4
 from minigpt4.models.minigpt_v2 import MiniGPTv2
+from minigpt4.models.minigpt_v2_pose import MiniGPTv2Pose
 from minigpt4.processors.base_processor import BaseProcessor
 
 
@@ -22,7 +23,8 @@ __all__ = [
     "BaseModel",
     "MiniGPTBase",
     "MiniGPT4",
-    "MiniGPTv2"
+    "MiniGPTv2",
+    "MiniGPTv2Pose"
 ]
 
 

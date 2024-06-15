@@ -1,0 +1,16 @@
+datasets:
+  coco_inst_part_rec:
+    data_type: images
+    vis_processor:
+      train:
+        name: "blip2_image_multitask_train"
+        image_size: 448
+    text_processor:
+      train:
+        name: "blip2_text_instpartrec_train"
+        bbox_ref_prob: 0.2
+    build_info:
+      image_path: /data/datasets/dataset_pose/coco
+      ann_path: 
+        train: /data/datasets/dataset_pose/coco/annotations/coco_instance_annotation_ref_train.jsonl
+      template_path: minigpt4/configs/datasets/instance_tasks/rec/part_rec_template.json

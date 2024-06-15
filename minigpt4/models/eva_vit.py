@@ -12,10 +12,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
+from torch.nn.init import normal_
 from timm.models.layers import drop_path, to_2tuple, trunc_normal_
 from timm.models.registry import register_model
 
 from minigpt4.common.dist_utils import download_cached_file
+
+# from minigpt4.models.vit_adapter import SpatialPriorModule, InteractionBlockWithCls, deform_inputs
+# from minigpt4.models.ops.modules import MSDeformAttn
 
 def _cfg(url='', **kwargs):
     return {
@@ -200,8 +204,10 @@ class PatchEmbed(nn.Module):
         # FIXME look at relaxing size constraints
         assert H == self.img_size[0] and W == self.img_size[1], \
             f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
-        x = self.proj(x).flatten(2).transpose(1, 2)
-        return x
+        x = self.proj(x)
+        _, _, H, W = x.shape
+        x = x.flatten(2).transpose(1, 2)
+        return x, H, W
 
 
 class RelativePositionBias(nn.Module):
@@ -250,12 +256,14 @@ class VisionTransformer(nn.Module):
                  num_heads=12, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0.,
                  drop_path_rate=0., norm_layer=nn.LayerNorm, init_values=None,
                  use_abs_pos_emb=True, use_rel_pos_bias=False, use_shared_rel_pos_bias=False,
-                 use_mean_pooling=True, init_scale=0.001, use_checkpoint=False):
+                 use_mean_pooling=True, init_scale=0.001, use_checkpoint=False,use_vit_adapter=False):
         super().__init__()
         self.image_size = img_size
         self.num_classes = num_classes
         self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other models
 
+        self.use_adapter = use_vit_adapter
+        self.patch_size= patch_size
         self.patch_embed = PatchEmbed(
             img_size=img_size, patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim)
         num_patches = self.patch_embed.num_patches
@@ -296,6 +304,61 @@ class VisionTransformer(nn.Module):
 #         if isinstance(self.head, nn.Linear):
 #             self.head.weight.data.mul_(init_scale)
 #             self.head.bias.data.mul_(init_scale)
+        
+        if self.use_adapter:
+            self.level_embed = nn.Parameter(torch.zeros(3, embed_dim))
+            self.spm = SpatialPriorModule(inplanes=64, embed_dim=embed_dim, with_cp=False)
+            self.num_adapter_blocks = 4
+            use_extra_extractor = True
+            self.interaction_indexes = [[0,9],[10,19],[20,29],[30,38]]
+            self.interactions = nn.Sequential(*[
+            InteractionBlockWithCls(dim=embed_dim, num_heads=num_heads, 
+                             n_points=4, init_values=0.1, 
+                             drop_path=0.3, with_cffn=True,
+                             cffn_ratio=0.25, deform_ratio=0.5,
+                             extra_extractor=((True if i == len(self.interaction_indexes) - 1
+                                               else False) and use_extra_extractor),
+                             with_cp=False)
+            for i in range(len(self.interaction_indexes))
+        ])
+            self.up = nn.ConvTranspose2d(embed_dim, embed_dim, 2, 2)
+            self.norm1 = nn.SyncBatchNorm(embed_dim)
+            self.norm2 = nn.SyncBatchNorm(embed_dim)
+            self.norm3 = nn.SyncBatchNorm(embed_dim)
+            self.norm4 = nn.SyncBatchNorm(embed_dim)
+
+            self.up.apply(self._init_weights)
+            self.spm.apply(self._init_weights)
+            self.interactions.apply(self._init_weights)
+            self.apply(self._init_deform_weights)
+            normal_(self.level_embed)
+            # self.injectors = []
+            # self.extractors = []
+            # for i in range(self.num_adapter_blocks):
+            #     self.injectors.append(
+            #                         Injector(dim=embed_dim, 
+            #                                 n_levels=3,             
+            #                                 norm_layer=norm_layer, 
+            #                                 with_cp=False)
+            #                         )
+            #     self.extractors.append(
+            #                         Extractor(dim=embed_dim, 
+            #                                 norm_layer=norm_layer, 
+            #                                 with_cp=False)
+            #                         )
+            # assert (depth + 1) %4 == 0 #last block unused
+            
+            # self.injector_idxs = list(range(0,depth+1,int((depth+1)/self.num_adapter_blocks)))
+
+            # self.extractor_idxs = self.injector_idxs[1:]
+            # self.extractor_idxs = self.extractor_idxs.append(depth-1)
+
+
+    def _add_level_embed(self, c2, c3, c4):
+            c2 = c2 + self.level_embed[0]
+            c3 = c3 + self.level_embed[1]
+            c4 = c4 + self.level_embed[2]
+            return c2, c3, c4
 
     def fix_init_weight(self):
         def rescale(param, layer_id):
@@ -310,9 +373,19 @@ class VisionTransformer(nn.Module):
             trunc_normal_(m.weight, std=.02)
             if isinstance(m, nn.Linear) and m.bias is not None:
                 nn.init.constant_(m.bias, 0)
-        elif isinstance(m, nn.LayerNorm):
+        elif isinstance(m, nn.LayerNorm) or isinstance(m, nn.BatchNorm2d):
             nn.init.constant_(m.bias, 0)
             nn.init.constant_(m.weight, 1.0)
+        elif isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
+            fan_out = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+            fan_out //= m.groups
+            m.weight.data.normal_(0, math.sqrt(2.0 / fan_out))
+            if m.bias is not None:
+                m.bias.data.zero_()
+    
+    def _init_deform_weights(self, m):
+        if isinstance(m, MSDeformAttn):
+            m._reset_parameters()
 
     def get_classifier(self):
         return self.head
@@ -322,21 +395,102 @@ class VisionTransformer(nn.Module):
         self.head = nn.Linear(self.embed_dim, num_classes) if num_classes > 0 else nn.Identity()
 
     def forward_features(self, x):
-        x = self.patch_embed(x)
-        batch_size, seq_len, _ = x.size()
+        if self.use_adapter:
+            deform_inputs1, deform_inputs2 = deform_inputs(x)
+            c1, c2, c3, c4 = self.spm(x)
+            c2, c3, c4 = self._add_level_embed(c2, c3, c4)
+            # print('c1 ',c1.shape)
+            # print('c2 ',c2.shape)
+            # print('c3 ',c3.shape)
+            # print('c4 ',c4.shape)
+            c = torch.cat([c2, c3, c4], dim=1)
 
+        # Patch Embedding
+        x,H,W = self.patch_embed(x)
+        # print('H ',H)
+        # print('W ',W)
+        bs, n, dim = x.shape
+        batch_size, seq_len, _ = x.size()
         cls_tokens = self.cls_token.expand(batch_size, -1, -1)  # stole cls_tokens impl from Phil Wang, thanks
-        x = torch.cat((cls_tokens, x), dim=1)
+        if not self.use_adapter:
+            x = torch.cat((cls_tokens, x), dim=1)
         if self.pos_embed is not None:
-            x = x + self.pos_embed
+            if self.use_adapter:
+                x = x + self.pos_embed[:,1:,:]
+            else:
+                x = x + self.pos_embed
         x = self.pos_drop(x)
 
         rel_pos_bias = self.rel_pos_bias() if self.rel_pos_bias is not None else None
-        for blk in self.blocks:
-            if self.use_checkpoint:
-                x = checkpoint.checkpoint(blk, x, rel_pos_bias)
-            else:
-                x = blk(x, rel_pos_bias)
+
+        if self.use_adapter:
+            outs = list()
+            classs = list()
+            H = W = int(self.image_size/16)
+            # print('new H ',H)
+            # print('new W ',W)
+            for i, layer in enumerate(self.interactions):
+                indexes = self.interaction_indexes[i]
+                x, c,cls = layer(x, c, cls_tokens, self.blocks[indexes[0]:indexes[-1] + 1],
+                            deform_inputs1, deform_inputs2, H, W, rel_pos_bias)
+                # print('for: ',x.shape)
+                patch_token_size = int(self.image_size/self.patch_size)
+                outs.append(x.transpose(1, 2).view(bs, dim, patch_token_size, patch_token_size).contiguous())
+                classs.append(cls)
+            c2 = c[:, 0:c2.size(1), :]
+            c3 = c[:, c2.size(1):c2.size(1) + c3.size(1), :]
+            c4 = c[:, c2.size(1) + c3.size(1):, :]
+
+            c2 = c2.transpose(1, 2).view(bs, dim, H * 2, W * 2).contiguous()
+            c3 = c3.transpose(1, 2).view(bs, dim, H, W).contiguous()
+            c4 = c4.transpose(1, 2).view(bs, dim, H//2, W//2).contiguous()
+            c1 = self.up(c2) + c1
+            
+            c1 = F.interpolate(c1, scale_factor=32/112, mode='bilinear', align_corners=False)
+            c2 = F.interpolate(c2, scale_factor=32/56, mode='bilinear', align_corners=False)
+            c3 = F.interpolate(c3, scale_factor=32/28, mode='bilinear', align_corners=False)
+            c4 = F.interpolate(c4, scale_factor=32/14, mode='bilinear', align_corners=False)
+            # print('==================')
+            # print(torch.isnan(c1).any(),torch.isinf(c1).any())
+            # print(torch.isnan(c2).any(),torch.isinf(c2).any())
+            # print(torch.isnan(c3).any(),torch.isinf(c3).any())
+            # print(torch.isnan(c4).any(),torch.isinf(c4).any())
+            # print('==================')
+            x1, x2, x3, x4 = outs
+            # print('++++++++++++++++++')
+            # print(torch.isnan(x1).any(),torch.isinf(x1).any())
+            # print(torch.isnan(x2).any(),torch.isinf(x2).any())
+            # print(torch.isnan(x3).any(),torch.isinf(x3).any())
+            # print(torch.isnan(x4).any(),torch.isinf(x4).any())
+            # print('++++++++++++++++++')
+            x1, x2, x3, x4 = x1 + c1, x2 + c2, x3 + c3, x4 + c4
+            x1 = x1.view(bs, dim, -1).transpose(1, 2)
+            x2 = x2.view(bs, dim, -1).transpose(1, 2)
+            x3 = x3.view(bs, dim, -1).transpose(1, 2)
+            x4 = x4.view(bs, dim, -1).transpose(1, 2)
+            
+            x1 = torch.cat((classs[0], x1), dim=1).transpose(1,2)
+            x2 = torch.cat((classs[1], x2), dim=1).transpose(1,2)
+            x3 = torch.cat((classs[2], x3), dim=1).transpose(1,2)
+            x4 = torch.cat((classs[3], x4), dim=1).transpose(1,2)
+            # x1 = self.norm1(x1)
+            # x2 = self.norm2(x2)
+            # x3 = self.norm3(x3)
+            # x4 = self.norm4(x4)
+            x = x1 + x2 + x3 + x4
+            x = x.transpose(1,2)
+
+        else:
+            for blk in self.blocks:
+                if self.use_checkpoint:
+                    x = checkpoint.checkpoint(blk, x, rel_pos_bias)
+                else:
+                    x = blk(x, rel_pos_bias)
+        # print(x.shape)
+                    
+        # print('******************')
+        # print(torch.isnan(x).any(),torch.isinf(x).any())
+        # print('******************')
         return x
 #         x = self.norm(x)
 
@@ -412,7 +566,7 @@ def convert_weights_to_fp16(model: nn.Module):
     model.apply(_convert_weights_to_fp16)
     
     
-def create_eva_vit_g(img_size=224,drop_path_rate=0.4,use_checkpoint=False,precision="fp16"):
+def create_eva_vit_g(img_size=224,drop_path_rate=0.4,use_checkpoint=False,precision="fp16",use_vit_adapter=False):
     model = VisionTransformer(
         img_size=img_size,
         patch_size=14,
@@ -425,6 +579,7 @@ def create_eva_vit_g(img_size=224,drop_path_rate=0.4,use_checkpoint=False,precis
         drop_path_rate=drop_path_rate,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         use_checkpoint=use_checkpoint,
+        use_vit_adapter=use_vit_adapter
     )  
     url = "https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/eva_vit_g.pth"
     cached_file = download_cached_file(

@@ -1,0 +1,77 @@
+model:
+  arch: minigpt_v2_pose
+  model_type: pretrain
+  max_txt_len: 1024
+  image_size: 448
+  quantize_bins: 100
+  end_sym: "</s>"
+  llama_model: "pretrained_models/language_models/llama-2-7b-chat"
+  ckpt: "minigpt4/output/Multitask_eva-G_llama2/202312300317/checkpoint_199.pth"
+  use_grad_checkpoint: True
+  chat_template: True
+  lora_r: 64
+  lora_alpha: 16
+  use_vit_adapter: True
+
+  num_keypoints: 19
+  point_loss_alpha: 10.0
+
+datasets:
+  coco_det_qa:
+    task: detection
+    batch_size: 2
+    vis_processor:
+      train:
+        name: "blip2_image_det_qa_train"
+        mean: [0.48145466, 0.4578275, 0.40821073]
+        std: [0.26862954, 0.26130258, 0.27577711]
+        image_size: [448, 448]
+      eval:
+        name: "blip2_image_det_qa_eval"
+        mean: [0.48145466, 0.4578275, 0.40821073]
+        std: [0.26862954, 0.26130258, 0.27577711]
+        image_size: [448, 448]
+    text_processor:
+      train:
+        name: "blip2_text_det_qa_train"
+      eval:
+        name: "blip2_text_det_qa_eval"
+    build_info:
+      ann_path:
+        val: /data/datasets/dataset_pedestrian_detection/coco/annotations/coco_detection_val_bbox.jsonl
+
+
+run:
+  task: detection_eval
+  # optimizer
+  lr_sched: "linear_warmup_cosine_lr"
+  init_lr: 1e-5
+  min_lr: 8e-5
+  warmup_lr: 1e-6
+
+  weight_decay: 0.05
+  max_epoch: 50
+  num_workers: 6
+  warmup_steps: 1000
+  iters_per_epoch: 1000
+
+  seed: 42
+  output_dir: "output/DetectionEval_coco_eva-G_llama2"
+
+  amp: True
+  resume_ckpt_path: null
+
+  evaluate: True 
+  train_splits: ["train"]
+  valid_splits: ["val"]
+  max_len: 200
+  min_len: 1
+  num_beams: 1
+
+  device: "cuda"
+  world_size: 1
+  dist_url: "env://"
+  distributed: True
+
+  wandb_log: False
+  job_name: multitask_qa

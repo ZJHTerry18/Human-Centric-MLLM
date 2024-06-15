@@ -140,16 +140,18 @@ class BaseModel(nn.Module):
 
     @classmethod
     def init_vision_encoder(
-        cls, model_name, img_size, drop_path_rate, use_grad_checkpoint, precision, freeze
+        cls, model_name, img_size, drop_path_rate, use_grad_checkpoint, precision, freeze, half_freeze=False, tune_posembed=False, tune_layernorm=False,use_vit_adapter=False
     ):
         logging.info('Loading VIT')
 
         assert model_name == "eva_clip_g", "vit model must be eva_clip_g for current version of MiniGPT-4"
-        if not freeze:
+        if freeze or half_freeze or tune_posembed or tune_layernorm or use_vit_adapter:
+            precision = "fp16"
+        else:
             precision = "fp32"  # fp16 is not for training
 
         visual_encoder = create_eva_vit_g(
-            img_size, drop_path_rate, use_grad_checkpoint, precision
+            img_size, drop_path_rate, use_grad_checkpoint, precision,use_vit_adapter
         )
 
         ln_vision = LayerNorm(visual_encoder.num_features)
@@ -163,7 +165,47 @@ class BaseModel(nn.Module):
                 param.requires_grad = False
             ln_vision = ln_vision.eval()
             ln_vision.train = disabled_train
-            logging.info("freeze vision encoder")
+            logging.info("freeze vision encoder") 
+        else:
+            for name, param in visual_encoder.named_parameters():
+                param.requires_grad = False
+
+            if half_freeze:
+                for name, param in visual_encoder.named_parameters():
+                    if 'blocks' in name:
+                        layer_idx = int(name.split('.')[1])
+                        if not 0 <= layer_idx <= 18:
+                            param.requires_grad = True
+                            param.data=param.data.to(torch.float32)
+                            # print(name)
+                logging.info("half freeze vision encoder")
+            if tune_posembed:
+                for name, param in visual_encoder.named_parameters():
+                    if 'pos_embed' in name:
+                        # print(name)
+                        param.requires_grad = True
+                        param.data=param.data.to(torch.float32)
+            if tune_layernorm:
+                for name, param in visual_encoder.named_parameters():
+                    if 'norm' in name.lower():
+                        # print(name)
+                        param.requires_grad = True
+                        param.data=param.data.to(torch.float32)
+            if use_vit_adapter:
+                for name, param in visual_encoder.named_parameters():
+                    head_name = name.split('.')[0]
+                    if 'level_embed' == head_name or \
+                        'spm' == head_name or \
+                        'interactions' == head_name or \
+                        'up' == head_name or \
+                        'norm1' == head_name or \
+                        'norm2' == head_name or \
+                        'norm3' == head_name or \
+                        'norm4' == head_name:
+                        # print(name)
+                        param.requires_grad = True
+                        param.data=param.data.to(torch.float32)
+
 
         logging.info('Loading VIT Done')
         return visual_encoder, ln_vision
@@ -198,7 +240,7 @@ class BaseModel(nn.Module):
             )
             llama_model = get_peft_model(llama_model, loraconfig)
 
-            llama_model.print_trainable_parameters()
+            # llama_model.print_trainable_parameters()
 
         else:
             for name, param in llama_model.named_parameters():

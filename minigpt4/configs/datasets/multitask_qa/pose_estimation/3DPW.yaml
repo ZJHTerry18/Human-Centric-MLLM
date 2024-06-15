@@ -1,0 +1,38 @@
+datasets:
+  3DPW_pose_qa: # name of the dataset builder
+    data_type: images # [images|videos|features]
+    vis_processor: 
+      common:
+        data_cfg:
+          image_size: [448, 448]
+          mean: [0.48145466, 0.4578275, 0.40821073]
+          std: [0.26862954, 0.26130258, 0.27577711]
+          # all_keypoint_dict: {0: 'nose', 1: 'neck', 2: 'right_shoulder', 3: 'right_elbow', 4: 'right_wrist', 5: 'left_shoulder', 6: 'left_elbow', 7: 'left_wrist', 8: 'right_hip', 9: 'right_knee', 10: 'right_ankle', 11: 'left_hip', 12: 'left_knee', 13: 'left_ankle', 14: 'right_eye', 15: 'left_eye', 16: 'right_ear', 17: 'left_ear'}
+          all_keypoint_dict: {0: 'nose', 1: 'head top', 2: 'neck', 3: 'left eye', 4: 'right eye', 5: 'left ear', 6: 'right ear', 7: 'left shoulder', 8: 'right shoulder', 9: 'left elbow', 10: 'right elbow', 11: 'left wrist', 12: 'right wrist', 13: 'left hip', 14: 'right hip', 15: 'left knee', 16: 'right knee', 17: 'left ankle', 18: 'right ankle'}
+          flip_pairs: [[3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18]]
+      train:
+        name: "blip2_image_pose_qa_train"
+        data_cfg: 
+          simp_aug: True
+      eval:
+        name: "blip2_image_pose_qa_eval"
+        data_cfg: 
+          image_size: [448, 448]
+          # all_keypoint_dict: {0: 'nose', 1: 'neck', 2: 'right_shoulder', 3: 'right_elbow', 4: 'right_wrist', 5: 'left_shoulder', 6: 'left_elbow', 7: 'left_wrist', 8: 'right_hip', 9: 'right_knee', 10: 'right_ankle', 11: 'left_hip', 12: 'left_knee', 13: 'left_ankle', 14: 'right_eye', 15: 'left_eye', 16: 'right_ear', 17: 'left_ear'}
+          all_keypoint_dict: {0: 'nose', 1: 'head top', 2: 'neck', 3: 'left eye', 4: 'right eye', 5: 'left ear', 6: 'right ear', 7: 'left shoulder', 8: 'right shoulder', 9: 'left elbow', 10: 'right elbow', 11: 'left wrist', 12: 'right wrist', 13: 'left hip', 14: 'right hip', 15: 'left knee', 16: 'right knee', 17: 'left ankle', 18: 'right ankle'}
+          skeleton: [[12,13], [9,10], [11,12], [8,9], [5,11], [2,8], [2,3], [5,6], [3,4], [6,7], [1,2], [1,5], [0,14],[0,15],[0,1], [14,16],[15,17],[8,11]]
+                  
+    text_processor:
+        train:
+          name: "blip2_text_pose_qa_train"
+        eval:
+          name: "blip2_text_pose_qa_eval"
+
+    build_info:
+      image_path: /data/datasets/dataset_pose/3DPW
+      ann_path:
+        train: /data/datasets/dataset_pose/3DPW/3DPW_pose_train_bbox.jsonl
+      template_path: minigpt4/configs/datasets/multitask_qa/pose_estimation/qa_template.json
+      
+
+

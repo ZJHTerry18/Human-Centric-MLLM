@@ -66,12 +66,24 @@ class BaseDatasetBuilder:
             vis_train_cfg = vis_proc_cfg.get("train")
             vis_eval_cfg = vis_proc_cfg.get("eval")
 
+            vis_common_cfg = vis_proc_cfg.get("common")
+            if vis_common_cfg is not None:
+                if vis_train_cfg is not None:
+                    vis_train_cfg = OmegaConf.merge(vis_common_cfg,vis_train_cfg)
+                if vis_eval_cfg is not None:
+                    vis_eval_cfg = OmegaConf.merge(vis_common_cfg,vis_eval_cfg)
+
             self.vis_processors["train"] = self._build_proc_from_cfg(vis_train_cfg)
             self.vis_processors["eval"] = self._build_proc_from_cfg(vis_eval_cfg)
 
         if txt_proc_cfg is not None:
             txt_train_cfg = txt_proc_cfg.get("train")
             txt_eval_cfg = txt_proc_cfg.get("eval")
+            if self.config.get("quantize_bins", None) is not None:
+                if txt_train_cfg is not None:
+                    txt_train_cfg["quantize_bins"] = self.config.get("quantize_bins")
+                if txt_eval_cfg is not None:
+                    txt_eval_cfg["quantize_bins"] = self.config.get("quantize_bins")
 
             self.text_processors["train"] = self._build_proc_from_cfg(txt_train_cfg)
             self.text_processors["eval"] = self._build_proc_from_cfg(txt_eval_cfg)

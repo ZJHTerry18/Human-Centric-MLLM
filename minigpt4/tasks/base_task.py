@@ -15,7 +15,7 @@ from minigpt4.common.logger import MetricLogger, SmoothedValue
 from minigpt4.common.registry import registry
 from minigpt4.datasets.data_utils import prepare_sample
 import wandb
-
+import time 
 class BaseTask:
     def __init__(self, **kwargs):
         super().__init__()
@@ -54,6 +54,7 @@ class BaseTask:
 
         for name in datasets_config:
             dataset_config = datasets_config[name]
+            dataset_config["quantize_bins"] = cfg.model_cfg.get('quantize_bins', None)
 
             builder = registry.get_builder_class(name)(dataset_config)
             dataset = builder.build_datasets()
@@ -112,10 +113,11 @@ class BaseTask:
         cuda_enabled=False,
         log_freq=50,
         accum_grad_iters=1,
+        iters_per_epoch=10000
     ):
         return self._train_inner_loop(
             epoch=epoch,
-            iters_per_epoch=lr_scheduler.iters_per_epoch,
+            iters_per_epoch=iters_per_epoch,
             model=model,
             data_loader=data_loader,
             optimizer=optimizer,
@@ -138,7 +140,7 @@ class BaseTask:
         scaler=None,
         cuda_enabled=False,
         log_freq=50,
-        accum_grad_iters=1,
+        accum_grad_iters=1
     ):
         return self._train_inner_loop(
             epoch=epoch,
@@ -190,7 +192,7 @@ class BaseTask:
                 epoch, iters_per_epoch
             )
         )
-        header = "Train: data epoch: [{}]".format(epoch)
+        header = "Train: epoch: [{}]".format(epoch)
         if start_iters is None:
             # epoch-based runner
             inner_epoch = epoch
@@ -215,25 +217,35 @@ class BaseTask:
                 }
             )
 
-            lr_scheduler.step(cur_epoch=inner_epoch, cur_step=i)
+            if self.cfg.run_cfg.get("runner", "runner_base") in ["runner_base_ds"]:
+                lr_scheduler.step()
+            else:
+                lr_scheduler.step(cur_epoch=inner_epoch, cur_step=i)
 
             with torch.cuda.amp.autocast(enabled=use_amp):
                 loss = self.train_step(model=model, samples=samples)
 
             # after_train_step()
-            if use_amp:
-                scaler.scale(loss).backward()
+            if self.cfg.run_cfg.get("runner", "runner_base") in ["runner_base_ds"]:
+                model.backward(loss)
             else:
-                loss.backward()
+                if use_amp:
+                    scaler.scale(loss).backward()
+                else:
+                    loss.backward()
 
             # update gradients every accum_grad_iters iterations
             if (i + 1) % accum_grad_iters == 0:
-                if use_amp:
-                    scaler.step(optimizer)
-                    scaler.update()                     
-                else:    
-                    optimizer.step()
-                optimizer.zero_grad()
+                if self.cfg.run_cfg.get("runner", "runner_base") in ["runner_base_ds"]:
+                    model.step()
+                else:
+                    if use_amp:
+                        scaler.step(optimizer)
+                        scaler.update()                     
+                    else:    
+                        optimizer.step()
+                    optimizer.zero_grad()
+
                 # if self.cfg.wandb_log:
                 if self.cfg.run_cfg.wandb_log:
                     wandb.log({"epoch": inner_epoch, "loss": loss})

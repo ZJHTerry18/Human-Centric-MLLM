@@ -1,0 +1,242 @@
+model:
+  arch: minigpt_v2
+  model_type: pretrain
+  max_txt_len: 1024
+  image_size: 448
+  end_sym: "</s>"
+  llama_model: "pretrained_models/language_models/llama-2-7b-chat"
+  ckpt: "checkpoints/minigptv2/checkpoint_stage2.pth"
+  use_grad_checkpoint: True
+  chat_template: True
+  low_resource: False
+  lora_r: 64
+  lora_alpha: 16
+
+datasets:
+### ---detection---
+  # coco_det_qa:
+  #   task: detection
+  #   batch_size: 2
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pedestrian_detection/coco/annotations/coco_detection_val_bbox.jsonl
+
+  # crowdhuman_det_qa:
+  #   task: detection
+  #   batch_size: 1
+  #   # build_info:
+  #   #   ann_path:
+  #   #     val: /data/datasets/dataset_pedestrian_detection/crowdhuman/crowdhuman_detection_val_bbox.jsonl
+
+  # cityperson_det_qa:
+  #   task: detection
+  #   batch_size: 1
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pedestrian_detection/cityperson/cityperson_detection_val_bbox.jsonl
+
+  # ECP_det_qa:
+  #   task: detection
+  #   batch_size: 1
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pedestrian_detection/ECP/ECP_detection_val_bbox.jsonl
+
+  # WiderPerson_det_qa:
+  #   task: detection
+  #   batch_size: 1
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pedestrian_detection/WiderPerson/WiderPerson_detection_val_bbox.jsonl
+
+  # widerpedestrian_det_qa:
+  #   task: detection
+  #   batch_size: 1
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pedestrian_detection/widerpedestrian/widerpedestrian_detection_val_bbox.jsonl
+
+### ---pose---
+  # coco_pose_qa:
+  #   task: pose_estimation
+  #   batch_size: 2
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pose/coco/annotations/coco_pose_val_bbox.jsonl
+
+  # aic_pose_qa:
+  #   task: pose_estimation
+  #   batch_size: 2
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pose/aic/aic_annotations/aic_pose_val_bbox.jsonl
+
+  # PoseTrack_pose_qa:
+  #   task: pose_estimation
+  #   batch_size: 2
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pose/PoseTrack/PoseTrack_pose_val_bbox.jsonl
+
+  # MHP_pose_qa:
+  #   task: pose_estimation
+  #   batch_size: 2
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pose/MHP/MHP_pose_val_bbox.jsonl
+
+  # 3DPW_pose_qa:
+  #   task: pose_estimation
+  #   batch_size: 2
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pose/3DPW/3DPW_pose_validation_bbox.jsonl
+
+  # halpe_pose_qa:
+  #   task: pose_estimation
+  #   batch_size: 2
+  #   # build_info:
+  #   #   ann_path:
+  #   #     val: /data/datasets/dataset_pose/halpe/halpe_pose_val_bbox.jsonl
+
+  # penn_action_pose_qa:
+  #   task: pose_estimation
+  #   batch_size: 2
+
+  # JRDB_pose_qa:
+  #   task: pose_estimation
+  #   batch_size: 2
+
+  # human36m_pose_qa:
+  #     task: pose_estimation
+  #     batch_size: 2
+  #     build_info:
+  #       ann_path:
+  #         val: /data/datasets/dataset_pose/human3.6m/h36m_pose_valid_bbox.jsonl
+
+### ---parsing---
+  # cihp_parsing_qa:
+  #   task: parsing
+  #   batch_size: 1
+  #   # build_info:
+  #   #   ann_path:
+  #   #     val: /data/datasets/dataset_parsing/CIHP/instance-level_human_parsing/CIHP_val_polygon.jsonl
+
+  # lip_parsing_qa:
+  #   task: parsing
+  #   batch_size: 1
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_parsing/LIP/TrainVal_parsing_annotations/LIP_val_polygon.jsonl
+  
+  # vip_parsing_qa:
+  #   task: parsing
+  #   batch_size: 1
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_parsing/VIP_new/VIP_Fine/annotations/VIP_val_polygon.jsonl
+  
+  # deepfashion2_parsing_qa:
+  #   task: parsing
+  #   batch_size: 1
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_parsing/DeepFashion2/deepfashion2_val_polygon.jsonl
+  
+  ## NOT USED FOR TRAINING. dataset validlity need to be checked. 
+  # modanet_parsing_qa: 
+  #   task: parsing
+  #   batch_size: 1
+  #   # modanet validation set has no annotations
+
+### ---MiniGPT-v2 default---
+  refvg:
+    batch_size: 2
+    sample_ratio: 40
+  
+  coco_caption:
+    batch_size: 2
+    sample_ratio: 10
+  
+  textcaps_caption: 
+    batch_size: 2
+    sample_ratio: 30
+  
+  refcoco: 
+    batch_size: 2
+    sample_ratio: 25
+  
+  refcocop:
+    batch_size: 2
+    sample_ratio: 25
+  
+  refcocog:
+    batch_size: 2
+    sample_ratio: 25
+  
+  invrefcoco:
+    batch_size: 2
+    sample_ratio: 10
+  
+  invrefcocop:
+    batch_size: 2
+    sample_ratio: 10
+  
+  invrefcocog:
+    batch_size: 2
+    sample_ratio: 10
+  
+  coco_vqa:    
+    batch_size: 2
+    sample_ratio: 15
+  
+  ok_vqa:   
+    batch_size: 2
+    sample_ratio: 8
+  
+  aok_vqa: 
+    batch_size: 2
+    sample_ratio: 12
+  
+  gqa:  
+    batch_size: 2
+    sample_ratio: 50
+  
+  ocrvqa: 
+    batch_size: 2
+    sample_ratio: 30
+  
+
+run:
+  task: image_text_pretrain
+  # optimizer
+  lr_sched: "linear_warmup_cosine_lr"
+  init_lr: 1e-5
+  min_lr: 8e-6
+  warmup_lr: 1e-6
+  accum_grad_iters: 24
+
+  weight_decay: 0.05
+  max_epoch: 100
+  num_workers: 6
+  warmup_steps: 1000
+  iters_per_epoch: 1000
+  epochs_per_save: 100
+
+  seed: 42
+  output_dir: "output/Multitask_eva-G_llama2"
+
+  amp: True
+  resume_ckpt_path: null
+
+  evaluate: False 
+  train_splits: ["train"]
+  valid_splits: []
+
+  device: "cuda"
+  world_size: 1
+  dist_url: "env://"
+  distributed: True
+
+  wandb_log: False
+  job_name: multitask_qa

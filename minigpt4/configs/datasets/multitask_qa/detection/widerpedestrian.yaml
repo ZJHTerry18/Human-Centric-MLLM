@@ -1,0 +1,25 @@
+datasets:
+  widerpedestrian_det_qa:
+    data_type: images
+    vis_processor:
+      train:
+        name: "blip2_image_det_qa_train"
+        mean: [0.48145466, 0.4578275, 0.40821073]
+        std: [0.26862954, 0.26130258, 0.27577711]
+        image_size: [448, 448]
+      eval:
+        name: "blip2_image_det_qa_eval"
+        mean: [0.48145466, 0.4578275, 0.40821073]
+        std: [0.26862954, 0.26130258, 0.27577711]
+        image_size: [448, 448]
+    text_processor:
+      train:
+        name: "blip2_text_det_qa_train"
+      eval:
+        name: "blip2_text_det_qa_eval"
+        
+    build_info:
+      image_path: /data/datasets/dataset_pedestrian_detection/widerpedestrian
+      ann_path:
+        train: /data/datasets/dataset_pedestrian_detection/widerpedestrian/widerpedestrian_detection_train_bbox.jsonl
+      template_path: minigpt4/configs/datasets/multitask_qa/detection/qa_template.json

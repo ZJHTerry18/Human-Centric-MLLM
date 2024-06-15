@@ -1,5 +1,12 @@
 datasets:
   unnatural_instruction:
     data_type: text
+    vis_processor:
+      train:
+        name: "blip2_image_train"
+        image_size: 448
+    text_processor:
+      train:
+        name: "blip_caption"
     build_info:
-      ann_path: /path/to/unnatural_instructions/filtered_unnatural_instruction.json
+      ann_path: /data/datasets/instruction_tuning/filtered_unnatural_instruction.json

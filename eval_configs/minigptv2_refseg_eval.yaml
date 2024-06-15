@@ -1,0 +1,49 @@
+model:
+  arch: minigpt_v2
+  model_type: pretrain
+  max_txt_len: 500
+  end_sym: "</s>"
+  low_resource: False
+  prompt_template: '[INST] {} [/INST]'
+  llama_model: "/home/human/codes/human/MiniGPT-4/pretrained_models/language_models/llama-2-7b-chat"
+  ckpt: "minigpt4/output/Refseg_eva-G_llama2/202312030703/checkpoint_59.pth"
+  lora_r: 64
+  lora_alpha: 16
+
+
+datasets:
+  cc_sbu_align:
+    vis_processor:
+      train:
+        name: "blip2_image_eval"
+        image_size: 448
+    text_processor:
+      train:
+        name: "blip_caption"
+
+evaluation_datasets:
+  refcoco:
+    eval_file_path: /home/human/codes/human/MiniGPT-4/annotation_files/refcoco_etc_eval  
+    img_path: /data/datasets/dataset_ref/coco2014/images/train2014      
+    max_new_tokens: 200
+    batch_size: 8
+  refcocog:
+    eval_file_path: /home/human/codes/human/MiniGPT-4/annotation_files/refcoco_etc_eval  
+    img_path: /data/datasets/dataset_ref/coco2014/images/train2014    
+    max_new_tokens: 200
+    batch_size: 4
+  refcoco+:
+    eval_file_path: /home/human/codes/human/MiniGPT-4/annotation_files/refcoco_etc_eval  
+    img_path: /data/datasets/dataset_ref/coco2014/images/train2014    
+    max_new_tokens: 200
+    batch_size: 4
+
+run:
+  task: image_text_pretrain
+  name: minigptv2_evaluation
+  save_path: minigpt4/output/refcocoseg_etc_eval_minigpt4v2
+
+  
+
+  
+

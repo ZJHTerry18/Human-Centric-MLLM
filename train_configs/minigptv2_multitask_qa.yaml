@@ -1,0 +1,400 @@
+model:
+  arch: minigpt_v2_pose
+  model_type: pretrain
+  max_txt_len: 1024
+  image_size: 448
+  quantize_bins: 100
+  end_sym: "</s>"
+  llama_model: "pretrained_models/language_models/llama-2-7b-chat"
+  ckpt: "checkpoints/minigptv2/checkpoint_stage2.pth"
+  
+  chat_template: True
+  low_resource: False
+  lora_r: 64
+  lora_alpha: 16
+
+  num_keypoints: 19
+  point_loss_alpha: 1.0
+
+  # use_grad_checkpoint: True
+  use_grad_checkpoint: False
+  freeze_vit: False
+  half_freeze: False
+  use_vit_adapter: True
+
+datasets:
+### ---detection---
+  coco_det_qa:
+    task: detection
+    batch_size: 1
+    sample_ratio: 4
+    # build_info:
+    #   ann_path:
+    #     val: /data/datasets/dataset_pedestrian_detection/coco/annotations/coco_detection_val_bbox.jsonl
+
+#   crowdhuman_det_qa:
+#     task: detection
+#     batch_size: 1
+#     sample_ratio: 2
+#     # build_info:
+#     #   ann_path:
+#     #     val: /data/datasets/dataset_pedestrian_detection/crowdhuman/crowdhuman_detection_val_bbox.jsonl
+
+#   cityperson_det_qa:
+#     task: detection
+#     batch_size: 1
+#     sample_ratio: 1
+#     # build_info:
+#     #   ann_path:
+#     #     val: /data/datasets/dataset_pedestrian_detection/cityperson/cityperson_detection_val_bbox.jsonl
+
+#   ECP_det_qa:
+#     task: detection
+#     batch_size: 1
+#     sample_ratio: 2
+#     # build_info:
+#     #   ann_path:
+#     #     val: /data/datasets/dataset_pedestrian_detection/ECP/ECP_detection_val_bbox.jsonl
+
+#   WiderPerson_det_qa:
+#     task: detection
+#     batch_size: 1
+#     sample_ratio: 1
+#     # build_info:
+#     #   ann_path:
+#     #     val: /data/datasets/dataset_pedestrian_detection/WiderPerson/WiderPerson_detection_val_bbox.jsonl
+
+#   widerpedestrian_det_qa:
+#     task: detection
+#     batch_size: 1
+#     sample_ratio: 1
+#     # build_info:
+#     #   ann_path:
+#     #     val: /data/datasets/dataset_pedestrian_detection/widerpedestrian/widerpedestrian_detection_val_bbox.jsonl
+
+# ### ---pose---
+#   coco_pose_qa:
+#     task: pose_estimation
+#     batch_size: 1
+#     sample_ratio: 5
+#     text_processor:
+#       train:
+#         name: blip2_text_pose_reg_train
+#       eval:
+#         name: blip2_text_pose_reg_eval
+#     build_info:
+#       template_path: minigpt4/configs/datasets/multitask_qa/pose_estimation/qa_reg_template.json
+
+#   aic_pose_qa:
+#     task: pose_estimation
+#     batch_size: 1
+#     sample_ratio: 7
+#     text_processor:
+#       train:
+#         name: blip2_text_pose_reg_train
+#       eval:
+#         name: blip2_text_pose_reg_eval
+#     build_info:
+#       template_path: minigpt4/configs/datasets/multitask_qa/pose_estimation/qa_reg_template.json
+
+#   PoseTrack_pose_qa:
+#     task: pose_estimation
+#     batch_size: 1
+#     sample_ratio: 4
+#     text_processor:
+#       train:
+#         name: blip2_text_pose_reg_train
+#       eval:
+#         name: blip2_text_pose_reg_eval
+#     build_info:
+#       template_path: minigpt4/configs/datasets/multitask_qa/pose_estimation/qa_reg_template.json
+
+#   # # NOT USED FOR TRAINING. dataset need to be checked. 
+#   # MHP_pose_qa:
+#   #   task: pose_estimation
+#   #   batch_size: 1
+#   #   sample_ratio: 2
+#   #   # build_info:
+#   #   #   ann_path:
+#   #   #     val: /data/datasets/dataset_pose/MHP/MHP_pose_val_bbox.jsonl
+
+#   3DPW_pose_qa:
+#     task: pose_estimation
+#     batch_size: 1
+#     sample_ratio: 2
+#     text_processor:
+#       train:
+#         name: blip2_text_pose_reg_train
+#       eval:
+#         name: blip2_text_pose_reg_eval
+#     build_info:
+#       template_path: minigpt4/configs/datasets/multitask_qa/pose_estimation/qa_reg_template.json
+
+#   halpe_pose_qa:
+#     task: pose_estimation
+#     batch_size: 1
+#     sample_ratio: 2
+#     text_processor:
+#       train:
+#         name: blip2_text_pose_reg_train
+#       eval:
+#         name: blip2_text_pose_reg_eval
+#     build_info:
+#       template_path: minigpt4/configs/datasets/multitask_qa/pose_estimation/qa_reg_template.json
+
+#   penn_action_pose_qa:
+#     task: pose_estimation
+#     batch_size: 1
+#     sample_ratio: 5
+#     text_processor:
+#       train:
+#         name: blip2_text_pose_reg_train
+#       eval:
+#         name: blip2_text_pose_reg_eval
+#     build_info:
+#       template_path: minigpt4/configs/datasets/multitask_qa/pose_estimation/qa_reg_template.json
+
+#   JRDB_pose_qa:
+#     task: pose_estimation
+#     batch_size: 1
+#     sample_ratio: 7
+#     text_processor:
+#       train:
+#         name: blip2_text_pose_reg_train
+#       eval:
+#         name: blip2_text_pose_reg_eval
+#     build_info:
+#       template_path: minigpt4/configs/datasets/multitask_qa/pose_estimation/qa_reg_template.json
+
+#   human36m_pose_qa:
+#     task: pose_estimation
+#     batch_size: 1
+#     sample_ratio: 7
+#     text_processor:
+#       train:
+#         name: blip2_text_pose_reg_train
+#       eval:
+#         name: blip2_text_pose_reg_eval
+#     build_info:
+#       template_path: minigpt4/configs/datasets/multitask_qa/pose_estimation/qa_reg_template.json
+
+# ### ---parsing---
+#   cihp_parsing_qa:
+#     task: parsing
+#     batch_size: 1
+#     sample_ratio: 7
+#     vis_processor:
+#       train:
+#         data_cfg:
+#           is_flip: False
+#     text_processor:
+#       train:
+#         sample_p: 0.1
+#     build_info:
+#       ann_path:
+#         train: /data/datasets/dataset_parsing/CIHP/instance-level_human_parsing/CIHP_train_polygon_bbox.jsonl
+#       template_path: minigpt4/configs/datasets/multitask_qa/parsing/qa_template_bbox.json
+
+#   lip_parsing_qa:
+#     task: parsing
+#     batch_size: 1
+#     sample_ratio: 4
+#     vis_processor:
+#       train:
+#         data_cfg:
+#           is_flip: False
+#     text_processor:
+#       train:
+#         sample_p: 0.1
+#     build_info:
+#       ann_path:
+#         train: /data/datasets/dataset_parsing/LIP/TrainVal_parsing_annotations/LIP_train_polygon_bbox.jsonl
+#       template_path: minigpt4/configs/datasets/multitask_qa/parsing/qa_template_bbox.json
+  
+#   vip_parsing_qa:
+#     task: parsing
+#     batch_size: 1
+#     sample_ratio: 4
+#     vis_processor:
+#       train:
+#         data_cfg:
+#           is_flip: False
+#     text_processor:
+#       train:
+#         sample_p: 0.1
+#     build_info:
+#       ann_path:
+#         train: /data/datasets/dataset_parsing/VIP_new/VIP_Fine/annotations/VIP_train_polygon_bbox.jsonl
+#       template_path: minigpt4/configs/datasets/multitask_qa/parsing/qa_template_bbox.json
+  
+#   deepfashion2_parsing_qa:
+#     task: parsing
+#     batch_size: 1
+#     sample_ratio: 5
+#     vis_processor:
+#       train:
+#         data_cfg:
+#           is_flip: False
+#     text_processor:
+#       train:
+#         sample_p: 0.1
+#     build_info:
+#       ann_path:
+#         train: /data/datasets/dataset_parsing/DeepFashion2/deepfashion2_train_polygon_bbox.jsonl
+#       template_path: minigpt4/configs/datasets/multitask_qa/parsing/qa_template_bbox.json
+  
+#   # NOT USED FOR TRAINING. dataset need to be checked. 
+#   # modanet_parsing_qa: 
+#   #   task: parsing
+#   #   batch_size: 1
+#   #   # modanet validation set has no annotations
+
+# ### ---MiniGPT-v2 default---
+#   refvg:
+#     batch_size: 2
+#     sample_ratio: 1
+  
+#   coco_caption:
+#     batch_size: 2
+#     sample_ratio: 1
+  
+#   textcaps_caption: 
+#     batch_size: 2
+#     sample_ratio: 1
+  
+#   refcoco: 
+#     batch_size: 2
+#     sample_ratio: 1
+  
+#   refcocop:
+#     batch_size: 2
+#     sample_ratio: 1
+  
+#   refcocog:
+#     batch_size: 2
+#     sample_ratio: 1
+  
+#   invrefcoco:
+#     batch_size: 2
+#     sample_ratio: 1
+  
+#   invrefcocop:
+#     batch_size: 2
+#     sample_ratio: 1
+  
+#   invrefcocog:
+#     batch_size: 2
+#     sample_ratio: 1
+  
+#   coco_vqa:    
+#     batch_size: 2
+#     sample_ratio: 1
+  
+#   ok_vqa:   
+#     batch_size: 2
+#     sample_ratio: 1
+  
+#   aok_vqa: 
+#     batch_size: 2
+#     sample_ratio: 1
+  
+#   gqa:  
+#     batch_size: 2
+#     sample_ratio: 1
+  
+#   ocrvqa: 
+#     batch_size: 2
+#     sample_ratio: 1
+  
+
+run:
+  # runner: runner_base_ds
+  runner: runner_base
+  task: image_text_pretrain_pointreg
+  # optimizer
+  lr_sched: "linear_warmup_cosine_lr"
+  init_lr: 1e-5
+  min_lr: 1e-6
+  warmup_lr: 1e-6
+  accum_grad_iters: 24
+
+  weight_decay: 0.05
+  max_epoch: 100
+  num_workers: 6
+  warmup_steps: 1000
+  iters_per_epoch: 5000
+  epochs_per_save: 5
+
+  seed: 42
+  output_dir: "output/Multitask_eva-G_llama2"
+
+  amp: True
+  resume_ckpt_path: null
+
+  evaluate: False 
+  train_splits: ["train"]
+  valid_splits: []
+
+  device: "cuda"
+  world_size: 1
+  dist_url: "env://"
+  distributed: True
+
+  wandb_log: False
+  job_name: multitask_qa
+
+
+# deepspeed arguments
+deepspeed:
+  train_micro_batch_size_per_gpu: 4 #will be overrided by run_config batch_size(train)
+  gradient_accumulation_steps: 24 #will be overrided by run_config accum_grad_iters(train)
+  gradient_clipping: 1.0
+  steps_per_print: 10000000000000
+
+  zero_optimization:
+    stage: 2
+    # offload_param:
+    #   device: cpu
+    #   pin_memory: true
+    offload_optimizer:
+      device: cpu
+      pin_memory: true
+    allgather_partitions: true
+    allgather_bucket_size: 4e8
+    overlap_comm: true
+    reduce_scatter: true
+    reduce_bucket_size: 4e8
+    contiguous_gradients: true
+    # round_robin_gradients: true
+  optimizer:
+    type: AdamW
+    params:
+      betas:
+      - 0.9
+      - 0.95
+      eps: 1.0e-08
+      lr: 1e-5
+      weight_decay: 0.05
+    
+  scheduler:
+    type: WarmupDecayLR
+    params:
+      total_num_steps: 500000 #max_epoch * iters_per_epoch
+      warmup_max_lr: 1e-5
+      warmup_min_lr: 0
+      warmup_num_steps: 2000
+
+  fp16:
+    enabled: false
+    opt_level: O2
+  
+  bf16:
+    enable: false
+
+  activation_checkpointing:
+    partition_activations: true
+    cpu_checkpointing: true
+    contiguous_memory_optimization: false
+    number_checkpoints: null
+    synchronize_checkpoint_boundary: false
+    profile: false

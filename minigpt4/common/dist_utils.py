@@ -80,16 +80,21 @@ def init_distributed_mode(args):
         ),
         flush=True,
     )
-    torch.distributed.init_process_group(
-        backend=args.dist_backend,
-        init_method=args.dist_url,
-        world_size=args.world_size,
-        rank=args.rank,
-        timeout=datetime.timedelta(
-            days=365
-        ),  # allow auto-downloading and de-compressing
-    )
-    torch.distributed.barrier()
+    runner_name = args.get("runner")
+    if runner_name in ["runner_base_ds"] :
+        deepspeed.init_distributed()
+    else:
+        torch.distributed.init_process_group(
+            backend=args.dist_backend,
+            init_method=args.dist_url,
+            world_size=args.world_size,
+            rank=args.rank,
+            timeout=datetime.timedelta(
+                days=365
+            ),  # allow auto-downloading and de-compressing
+        )
+        torch.distributed.barrier()
+
     setup_for_distributed(args.rank == 0)
 
 

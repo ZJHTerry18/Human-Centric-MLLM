@@ -1,0 +1,230 @@
+model:
+  arch: minigpt_v2
+  model_type: pretrain
+  max_txt_len: 1024
+  image_size: 448
+  quantize_bins: 100
+  end_sym: "</s>"
+  llama_model: "pretrained_models/language_models/llama-2-7b-chat"
+  # ckpt: "/data/zhaojiahe/minigpt-checkpoints/output/HCM_eva-G_llama2/202402082227/checkpoint_9.pth"
+  ckpt: checkpoints/minigptv2/checkpoint_stage3.pth
+  use_grad_checkpoint: True
+  chat_template: True
+  low_resource: False
+  lora_r: 64
+  lora_alpha: 16
+  freeze_vit: True
+
+datasets:
+### ---dense caption--- 
+  # coco_dense_caption:
+  #   task: dense_caption
+  #   batch_size: 2
+  #   sample_ratio: 13.5
+    
+  # cihp_dense_caption:
+  #   task: dense_caption
+  #   batch_size: 2
+  #   sample_ratio: 13.5
+
+  # aic_dense_caption:
+  #   task: dense_caption
+  #   batch_size: 2
+  #   sample_ratio: 13.5
+  
+  # ccslaion_dense_caption:
+  #   task: dense_caption
+  #   batch_size: 2
+  #   sample_ratio: 13.5
+
+
+### ---instance caption---
+  coco_inst_pose:
+    task: pose
+    build_info:
+      ann_path:
+        val: /data/datasets/dataset_pose/coco/annotations/coco_instance_annotation_val.jsonl
+    batch_size: 2
+    sample_ratio: 13.5
+
+  # coco_inst_app:
+  #   task: appearance
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pose/coco/annotations/coco_instance_annotation_val.jsonl
+  #   batch_size: 2
+  #   sample_ratio: 13.5
+  
+  # coco_inst_mod:
+  #   task: modality
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pose/coco/annotations/coco_instance_annotation_val.jsonl
+  #   batch_size: 2
+  #   sample_ratio: 13.5
+
+  # coco_inst_rel:
+  #   task: relation
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pose/coco/annotations/coco_instance_annotation_val.jsonl
+  #   batch_size: 2
+  #   sample_ratio: 13.5
+  
+  # aic_inst_pose:
+  #   task: pose
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pose/aic/aic_annotations/aic_instance_annotation_val.jsonl
+  #   batch_size: 2
+  #   sample_ratio: 13.5
+
+  # aic_inst_app:
+  #   task: appearance
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pose/aic/aic_annotations/aic_instance_annotation_val.jsonl
+  #   batch_size: 2
+  #   sample_ratio: 13.5
+  
+  # aic_inst_mod:
+  #   task: modality
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pose/aic/aic_annotations/aic_instance_annotation_val.jsonl
+  #   batch_size: 2
+  #   sample_ratio: 13.5
+
+  # aic_inst_rel:
+  #   task: relation
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/dataset_pose/aic/aic_annotations/aic_instance_annotation_val.jsonl
+  #   batch_size: 2
+  #   sample_ratio: 13.5
+  
+  # ccslaion_inst_pose:
+  #   task: pose
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/ccs_laion/sampled_1M_images/ccslaion_instance_annotation_val.jsonl
+  #   batch_size: 2
+  #   sample_ratio: 13.5
+
+  # ccslaion_inst_app:
+  #   task: appearance
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/ccs_laion/sampled_1M_images/ccslaion_instance_annotation_val.jsonl
+  #   batch_size: 2
+  #   sample_ratio: 13.5
+  
+  # ccslaion_inst_mod:
+  #   task: modality
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/ccs_laion/sampled_1M_images/ccslaion_instance_annotation_val.jsonl
+  #   batch_size: 2
+  #   sample_ratio: 13.5
+
+  # ccslaion_inst_rel:
+  #   task: relation
+  #   build_info:
+  #     ann_path:
+  #       val: /data/datasets/ccs_laion/sampled_1M_images/ccslaion_instance_annotation_val.jsonl
+  #   batch_size: 2
+  #   sample_ratio: 13.5
+
+run:
+  # runner: runner_base_ds
+  runner: runner_base
+  task: hcm_cap_val
+  # optimizer
+  lr_sched: "linear_warmup_cosine_lr"
+  init_lr: 1e-5
+  min_lr: 1e-6
+  warmup_lr: 1e-6
+  accum_grad_iters: 12
+
+  weight_decay: 0.05
+  max_epoch: 50
+  num_workers: 1
+  warmup_steps: 1000
+  iters_per_epoch: 5000
+  epochs_per_save: 10
+
+  seed: 42
+  output_dir: "/data/zhaojiahe/minigpt-checkpoints/output/HCMeval_eva-G_llama2"
+
+  amp: True
+  resume_ckpt_path: null
+
+  evaluate: True 
+  train_splits: ["train"]
+  valid_splits: ["val"]
+  max_len: 1000
+  min_len: 1
+  num_beams: 1
+
+  device: "cuda"
+  world_size: 1
+  dist_url: "env://"
+  distributed: True
+
+  wandb_log: False
+  job_name: multitask_qa
+
+
+# deepspeed arguments
+deepspeed:
+  train_micro_batch_size_per_gpu: 4 #will be overrided by run_config batch_size(train)
+  gradient_accumulation_steps: 24 #will be overrided by run_config accum_grad_iters(train)
+  gradient_clipping: 13.5
+  steps_per_print: 10000000000000
+
+  zero_optimization:
+    stage: 2
+    # offload_param:
+    #   device: cpu
+    #   pin_memory: true
+    offload_optimizer:
+      device: cpu
+      pin_memory: true
+    allgather_partitions: true
+    allgather_bucket_size: 4e8
+    overlap_comm: true
+    reduce_scatter: true
+    reduce_bucket_size: 4e8
+    contiguous_gradients: true
+  optimizer:
+    type: AdamW
+    params:
+      betas:
+      - 0.9
+      - 0.95
+      eps: 13.5e-08
+      lr: 1e-5
+      weight_decay: 0.05
+    
+  scheduler:
+    type: WarmupDecayLR
+    params:
+      total_num_steps: 500000 #max_epoch * iters_per_epoch
+      warmup_max_lr: 1e-5
+      warmup_min_lr: 0
+      warmup_num_steps: 2000
+
+  fp16:
+    enabled: false
+    opt_level: O2
+  
+  bf16:
+    enable: false
+
+  activation_checkpointing:
+    partition_activations: true
+    cpu_checkpointing: true
+    contiguous_memory_optimization: false
+    number_checkpoints: null
+    synchronize_checkpoint_boundary: false
+    profile: false

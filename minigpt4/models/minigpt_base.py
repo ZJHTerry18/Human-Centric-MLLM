@@ -1,5 +1,6 @@
 import logging
 import random
+import re
 
 import torch
 from torch.cuda.amp import autocast as autocast
@@ -35,6 +36,10 @@ class MiniGPTBase(BaseModel):
         lora_target_modules=["q_proj", "v_proj"],
         lora_alpha=16,
         lora_dropout=0.05,
+        half_freeze=False,
+        tune_posembed=False,
+        tune_layernorm=False,
+        use_vit_adapter=False
     ):
         super().__init__()
 
@@ -49,7 +54,7 @@ class MiniGPTBase(BaseModel):
         )
 
         self.visual_encoder, self.ln_vision = self.init_vision_encoder(
-            vit_model, img_size, drop_path_rate, use_grad_checkpoint, vit_precision, freeze_vit
+            vit_model, img_size, drop_path_rate, use_grad_checkpoint, vit_precision, freeze_vit, half_freeze, tune_posembed, tune_layernorm,use_vit_adapter
         )
 
         self.max_txt_len = max_txt_len
@@ -58,6 +63,7 @@ class MiniGPTBase(BaseModel):
 
         self.prompt_template = prompt_template
         self.prompt_list = []
+        self.wo_task_identifier = True
 
     def vit_to_cpu(self):
         self.ln_vision.to("cpu")
@@ -74,6 +80,8 @@ class MiniGPTBase(BaseModel):
                 seg, return_tensors="pt", add_special_tokens=i==0).to(device).input_ids # only add bos to the first seg
             for i, seg in enumerate(prompt_segs)
         ]
+        # print('text_input: ', prompt)
+        # print('input_ids: ', seg_tokens)
         seg_embs = [self.embed_tokens(seg_t) for seg_t in seg_tokens]
 
         mixed_embs = [emb for pair in zip(seg_embs[:-1], img_list) for emb in pair] + [seg_embs[-1]]
@@ -265,12 +273,22 @@ class MiniGPTBase(BaseModel):
             part_targets = regress_token_ids.masked_fill(
                 regress_token_ids == self.llama_tokenizer.pad_token_id, -100
             )
+            # print('output_ids: ', regress_tokens.input_ids)
+            # print('text_input: ', samples['instruction_input'])
+            # print('text_output:', samples['answer'])
 
         regress_embeds = self.embed_tokens(regress_token_ids)
 
         return cond_embeds, cond_atts, regress_embeds, regress_atts, part_targets
 
-    def forward(self, samples, reduction='mean'):
+    def forward(self, samples, reduction='mean', debug_mode=False):
+        if self.wo_task_identifier: # remove the task identifier
+            key = 'instruction_input' if 'instruction_input' in samples.keys() else 'conv_q'
+            for i in range(len(samples[key])):
+                inst = samples[key][i]
+                inst = re.sub(r'\[[a-z\s]*\]', '', inst)
+                samples[key][i] = inst
+
         # prepare the embedding to condition and the embedding to regress
         cond_embeds, cond_atts, regress_embeds, regress_atts, part_targets = \
             self.preparing_embedding(samples)
@@ -294,7 +312,15 @@ class MiniGPTBase(BaseModel):
 
         for i, target in enumerate(part_targets):
             targets[i, input_lens[i]+1:input_lens[i]+len(target)+1] = target  # plus 1 for bos
-
+        # if 'image_id' in samples.keys():
+        #     print('image: ', samples['image_id'])
+        # if 'instruction_input' in samples.keys():
+        #     print('text input: ', samples['instruction_input'])
+        #     print('text output: ', samples['answer'])
+        # if 'conv_q' in samples.keys():
+        #     print('text input: ', samples['conv_q'])
+        #     print('text output: ', samples['conv_a'])
+        # print('targets: ', targets.shape, targets)
         with self.maybe_autocast():
             outputs = self.llama_model(
                 inputs_embeds=inputs_embeds,
@@ -304,6 +330,16 @@ class MiniGPTBase(BaseModel):
                 reduction=reduction
             )
         loss = outputs.loss
+
+        # logit_ids = outputs.logits.argmax(dim=-1)
+        # preds = []
+        # for logit in logit_ids:
+        #     pred = self.llama_tokenizer.decode(logit, skip_special_tokens=True)
+        #     preds.append(pred)
+        # # print('preds: ', preds)
+
+        # if debug_mode:
+        #     return preds
 
         return {"loss": loss}
 
@@ -335,6 +371,12 @@ class MiniGPTBase(BaseModel):
 
         stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(
             stops=[torch.tensor([i]).to(self.device) for i in stop_words_ids])])
+
+        # if self.wo_task_identifier: # remove the task identifier
+        #     for i in range(len(texts)):
+        #         inst = texts[i]
+        #         inst = re.sub(r'\[[a-z\s]*\]', '', inst)
+        #         texts[i] = inst
 
         img_embeds, atts_img = self.encode_img(images.to(self.device))
         image_lists = [[image_emb[None]] for image_emb in img_embeds]
@@ -387,6 +429,9 @@ class MiniGPTBase(BaseModel):
             output_texts = output_texts.replace("<s>", "")
             output_texts = output_texts.split(r'[/INST]')[-1].strip()
             answers.append(output_texts)
+        
+        # print('input: ', texts)
+        # print('output: ', answers)
 
         return answers
 

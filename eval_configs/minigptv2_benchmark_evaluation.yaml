@@ -2,11 +2,17 @@ model:
   arch: minigpt_v2
   model_type: pretrain
   max_txt_len: 500
+  quantize_bins: 100
   end_sym: "</s>"
   low_resource: False
   prompt_template: '[INST] {} [/INST]'
-  llama_model: ""
-  ckpt: ""
+  llama_model: "pretrained_models/language_models/llama-2-7b-chat"
+  # ckpt: "/data/zhaojiahe/minigpt-checkpoints/output/HCM_instruction_eva-G_llama2/202402210559/checkpoint_19.pth"
+  # ckpt: "/data/zhaojiahe/minigpt-checkpoints/output/HCM_eva-G_llama2/202402152330/checkpoint_9.pth"
+  # ckpt: "/data/zhaojiahe/minigpt-checkpoints/output/HCM_instruction_eva-G_llama2/202402210559/checkpoint_19.pth"
+  # ckpt: "checkpoints/minigptv2/checkpoint_stage3.pth"
+  ckpt: /data/zhaojiahe/minigpt-checkpoints/output/HCM_instruction_eva-G_llama2/202402271145/checkpoint_19.pth
+
   lora_r: 64
   lora_alpha: 16
 
@@ -23,57 +29,108 @@ datasets:
 
 evaluation_datasets:
   refcoco:
-    eval_file_path: /path/to/eval/annotation/path  
-    img_path: /path/to/eval/image/path      
+    eval_file_path: annotation_files/refcoco_etc_eval  
+    img_path: /data/datasets/dataset_ref/coco2014/images/train2014      
     max_new_tokens: 20
-    batch_size: 10
+    batch_size: 25
   refcocog:
-    eval_file_path: /path/to/eval/annotation/path  
-    img_path: /path/to/eval/image/path    
+    eval_file_path: annotation_files/refcoco_etc_eval  
+    img_path: /data/datasets/dataset_ref/coco2014/images/train2014    
     max_new_tokens: 20
-    batch_size: 10
+    batch_size: 25
   refcoco+:
-    eval_file_path: /path/to/eval/annotation/path  
-    img_path: /path/to/eval/image/path    
+    eval_file_path: annotation_files/refcoco_etc_eval  
+    img_path: /data/datasets/dataset_ref/coco2014/images/train2014    
     max_new_tokens: 20
-    batch_size: 10
+    batch_size: 25
   gqa:
-    eval_file_path: /path/to/eval/annotation/path  
-    img_path: /path/to/eval/image/path    
+    eval_file_path: /home/human/MiniGPT-4/eval_scripts/eval_data/gqa/testdev_balanced_questions.json  
+    img_path: /data/datasets/dataset_ref/gqa/images/train  
     max_new_tokens: 20
     batch_size: 10
   okvqa:
-    eval_file_path: /path/to/eval/annotation/path  
-    img_path: /path/to/eval/image/path     
+    eval_file_path: /home/human/MiniGPT-4/eval_scripts/eval_data/okvqa  
+    img_path: /data/datasets/dataset_ref/coco2014/images/val2014
     max_new_tokens: 20
     batch_size: 10
-  vizwiz:
-    eval_file_path: /path/to/eval/annotation/path  
-    img_path: /path/to/eval/image/path    
-    max_new_tokens: 20
-    batch_size: 10
-  iconvqa:
-    eval_file_path: /path/to/eval/annotation/path  
-    img_path: /path/to/eval/image/path    
-    max_new_tokens: 20
-    batch_size: 10
-  vsr:
-    eval_file_path: cambridgeltl/vsr_zeroshot 
-    img_path: /path/to/eval/image/path    
-    max_new_tokens: 20
-    batch_size: 10
-  hm:
-    eval_file_path: /path/to/eval/annotation/path  
-    img_path: /path/to/eval/image/path 
-    max_new_tokens: 20
-    batch_size: 100
+  # vizwiz:
+  #   eval_file_path: /home/human/codes/human/MiniGPT-4/annotation_files  
+  #   img_path: /data/datasets/coco/train2017/    
+  #   max_new_tokens: 20
+  #   batch_size: 10
+  # iconvqa:
+  #   eval_file_path: /home/human/codes/human/MiniGPT-4/annotation_files  
+  #   img_path: /data/datasets/coco/train2017/    
+  #   max_new_tokens: 20
+  #   batch_size: 10
+  # vsr:
+  #   eval_file_path: cambridgeltl/vsr_zeroshot 
+  #   img_path: /data/datasets/coco/train2017/    
+  #   max_new_tokens: 20
+  #   batch_size: 10
+  # hm:
+  #   eval_file_path: /home/human/codes/human/MiniGPT-4/annotation_files  
+  #   img_path: /data/datasets/coco/train2017/ 
+  #   max_new_tokens: 20
+  #   batch_size: 100
 
 run:
   task: image_text_pretrain
   name: minigptv2_evaluation
-  save_path: /path/to/save/folder_path
+  save_path: minigpt4/output/refcoco_etc_eval_minigpt4v2
 
+# deepspeed arguments
+deepspeed:
+  train_micro_batch_size_per_gpu: 4 #will be overrided by run_config batch_size(train)
+  gradient_accumulation_steps: 24 #will be overrided by run_config accum_grad_iters(train)
+  gradient_clipping: 1.0
+  steps_per_print: 10000000000000
+
+  zero_optimization:
+    stage: 2
+    # offload_param:
+    #   device: cpu
+    #   pin_memory: true
+    offload_optimizer:
+      device: cpu
+      pin_memory: true
+    allgather_partitions: true
+    allgather_bucket_size: 4e8
+    overlap_comm: true
+    reduce_scatter: true
+    reduce_bucket_size: 4e8
+    contiguous_gradients: true
+  optimizer:
+    type: AdamW
+    params:
+      betas:
+      - 0.9
+      - 0.95
+      eps: 1.0e-08
+      lr: 1e-5
+      weight_decay: 0.05
+    
+  scheduler:
+    type: WarmupDecayLR
+    params:
+      total_num_steps: 500000 #max_epoch * iters_per_epoch
+      warmup_max_lr: 1e-5
+      warmup_min_lr: 0
+      warmup_num_steps: 2000
+
+  fp16:
+    enabled: false
+    opt_level: O2
   
+  bf16:
+    enable: false
 
+  activation_checkpointing:
+    partition_activations: true
+    cpu_checkpointing: true
+    contiguous_memory_optimization: false
+    number_checkpoints: null
+    synchronize_checkpoint_boundary: false
+    profile: false
   
 

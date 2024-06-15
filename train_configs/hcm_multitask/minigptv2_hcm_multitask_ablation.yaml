@@ -1,0 +1,253 @@
+model:
+  arch: minigpt_v2
+  model_type: pretrain
+  max_txt_len: 512
+  image_size: 448
+  quantize_bins: 100
+  end_sym: "</s>"
+  llama_model: "pretrained_models/language_models/llama-2-7b-chat"
+  ckpt: "checkpoints/minigptv2/checkpoint_stage2.pth"
+  use_grad_checkpoint: True
+  chat_template: True
+  low_resource: False
+  lora_r: 64
+  lora_alpha: 16
+  freeze_vit: True
+
+datasets:
+#### --hcm tasks--
+## ---dense caption--- 
+  coco_dense_caption:
+    task: dense_caption
+    batch_size: 2
+    sample_ratio: 58.2
+    
+  cihp_dense_caption:
+    task: dense_caption
+    batch_size: 2
+    sample_ratio: 58.2
+
+  aic_dense_caption:
+    task: dense_caption
+    batch_size: 2
+    sample_ratio: 58.2
+  
+  ccslaion_dense_caption:
+    task: dense_caption
+    batch_size: 2
+    sample_ratio: 58.2
+
+
+### ---instance caption---
+  # coco_inst_pose:
+  #   task: pose
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+
+  # coco_inst_app:
+  #   task: appearance
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+  
+  # coco_inst_mod:
+  #   task: modality
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+
+  # coco_inst_rel:
+  #   task: relation
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+  
+  # aic_inst_pose:
+  #   task: pose
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+
+  # aic_inst_app:
+  #   task: appearance
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+  
+  # aic_inst_mod:
+  #   task: modality
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+
+  # aic_inst_rel:
+  #   task: relation
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+  
+  # ccslaion_inst_pose:
+  #   task: pose
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+
+  # ccslaion_inst_app:
+  #   task: appearance
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+  
+  # ccslaion_inst_mod:
+  #   task: modality
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+
+  # ccslaion_inst_rel:
+  #   task: relation
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+
+# ### ---instance appearance grounding---
+  # coco_inst_grounding:
+  #   task: appearance
+  #   batch_size: 2
+  #   sample_ratio: 16.8
+  
+  # aic_inst_grounding:
+  #   task: appearance
+  #   batch_size: 2
+  #   sample_ratio: 16.8
+  
+  # ccslaion_inst_grounding:
+  #   task: appearance
+  #   batch_size: 2
+  #   sample_ratio: 16.8
+
+## ---instance-level rec
+  # coco_inst_rec:
+  #   task: inst_rec
+  #   batch_size: 2
+  #   sample_ratio: 16.8
+  
+  # aic_inst_rec:
+  #   task: inst_rec
+  #   batch_size: 2
+  #   sample_ratio: 16.8
+  
+  # ccslaion_inst_rec:
+  #   task: inst_rec
+  #   batch_size: 2
+  #   sample_ratio: 16.8
+
+### ---instance part-level rec---
+  # coco_inst_part_rec:
+  #   task: part_rec
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+  
+  # aic_inst_part_rec:
+  #   task: part_rec
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+  
+  # ccslaion_inst_part_rec:
+  #   task: part_rec
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+  
+  # cihp_parsing_rec:
+  #   task: part_rec
+  #   batch_size: 2
+  #   sample_ratio: 6.25
+
+
+### ---MiniGPT-v2 default--- # TOTAL WEIGHT=114.15
+  refvg:
+    batch_size: 2
+    sample_ratio: 12.35
+  
+  coco_caption:
+    batch_size: 2
+    sample_ratio: 2.85
+  
+  textcaps_caption: 
+    batch_size: 2
+    sample_ratio: 9.5
+  
+  refcoco: 
+    batch_size: 2
+    sample_ratio: 8.55
+  
+  refcocop:
+    batch_size: 2
+    sample_ratio: 8.55
+  
+  refcocog:
+    batch_size: 2
+    sample_ratio: 8.55
+  
+  invrefcoco:
+    batch_size: 2
+    sample_ratio: 2.85
+  
+  invrefcocop:
+    batch_size: 2
+    sample_ratio: 2.85
+  
+  invrefcocog:
+    batch_size: 2
+    sample_ratio: 2.85
+  
+  coco_vqa:    
+    batch_size: 2
+    sample_ratio: 4.75
+  
+  ok_vqa:   
+    batch_size: 2
+    sample_ratio: 1.9
+  
+  aok_vqa: 
+    batch_size: 2
+    sample_ratio: 3.8
+  
+  gqa:  
+    batch_size: 2
+    sample_ratio: 16.15
+  
+  ocrvqa: 
+    batch_size: 2
+    sample_ratio: 16.15
+
+  grit_grounding:
+    task: grounding
+    batch_size: 2
+    sample_ratio: 12.5
+  
+
+run:
+  # runner: runner_base_ds
+  runner: runner_base
+  task: image_text_pretrain
+  # optimizer
+  lr_sched: "linear_warmup_cosine_lr"
+  init_lr: 1e-4
+  min_lr: 1e-5
+  warmup_lr: 1e-6
+  accum_grad_iters: 12
+
+  weight_decay: 0.05
+  max_epoch: 25
+  num_workers: 1
+  warmup_steps: 6.2500
+  iters_per_epoch: 5000
+  epochs_per_save: 5
+
+  seed: 42
+  output_dir: "output/HCM_eva-G_llama2"
+
+  amp: True
+  resume_ckpt_path: null
+
+  evaluate: False 
+  train_splits: ["train"]
+  valid_splits: []
+
+  device: "cuda"
+  world_size: 1
+  dist_url: "env://"
+  distributed: True
+
+  wandb_log: False
+  job_name: multitask_qa

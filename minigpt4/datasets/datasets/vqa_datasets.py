@@ -36,7 +36,7 @@ class OKVQAEvalData(torch.utils.data.Dataset):
         img_id = data['image_id']
         question = data['question']
         question_id = data['question_id']
-        img_file = '{:0>12}.jpg'.format(img_id)
+        img_file = 'COCO_val2014_'+'{:0>12}.jpg'.format(img_id)
         image_path = os.path.join(self.root_path, img_file)
         image = Image.open(image_path).convert('RGB')
         image = self.vis_processor(image)

@@ -28,6 +28,7 @@ class ReferCOCODataset(Dataset):
 
         self.vis_processor = vis_processor
         self.text_processor = text_processor
+        self.quantize_bins = self.text_processor.quantize_bins
 
         self.refer = REFER(ann_path, vis_root, dataset, splitBy)
         self.ref_ids = self.refer.getRefIds(split="train")
@@ -57,7 +58,7 @@ class ReferCOCODataset(Dataset):
         image = self.vis_processor(image)
         image_new_size = [image.shape[1], image.shape[2]]
 
-        image_new_size = [100,100]
+        image_new_size = [self.quantize_bins, self.quantize_bins]
 
         sample_sentence = random.choice(ref['sentences'])['raw']
         refer_sentence = self.text_processor(sample_sentence)

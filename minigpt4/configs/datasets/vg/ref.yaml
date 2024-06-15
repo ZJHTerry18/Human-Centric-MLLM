@@ -1,5 +1,12 @@
 datasets:
   refvg:
     data_type: images
+    vis_processor:
+      train:
+        name: "blip2_image_train"
+        image_size: 448
+    text_processor:
+      train:
+        name: "blip_caption"
     build_info:
-      data_dir: /path/to/visual_genome
+      data_dir: /data/datasets/dataset_ref/VisualGenome

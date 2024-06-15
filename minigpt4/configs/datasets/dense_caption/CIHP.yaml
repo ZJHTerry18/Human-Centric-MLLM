@@ -1,0 +1,18 @@
+datasets:
+  cihp_dense_caption:
+    data_type: images
+    vis_processor:
+      train:
+        name: "blip2_image_multitask_train"
+        image_size: 448
+    text_processor:
+      train:
+        name: "blip2_densecap_train"
+      eval:
+        name: blip2_densecap_eval
+    build_info:
+      image_path: /data/datasets/dataset_parsing/CIHP/instance-level_human_parsing
+      ann_path: 
+        train: /data/datasets/dataset_parsing/CIHP_dense_caption_train.jsonl
+      template_path: minigpt4/configs/datasets/dense_caption/template.json
+      

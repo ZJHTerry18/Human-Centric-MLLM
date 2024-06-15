@@ -9,13 +9,21 @@ datasets:
     # data_dir: ${env.data_dir}/datasets
     data_type: images # [images|videos|features]
 
+    vis_processor:
+      train:
+        name: "blip2_image_train"
+        image_size: 448
+    text_processor:
+      train:
+        name: "blip_caption"
+
     build_info:
       # Be careful not to append minus sign (-) before split to avoid itemizing
       annotations:
         train:
           url: https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_train.json
           md5: aa31ac474cf6250ebb81d18348a07ed8
-          storage: /path/to/coco_caption/coco_karpathy_train.json
+          storage: minigptv2_json/coco_karpathy_train.json
       images:
-        storage: /path/to/coco/images
+        storage: /data/datasets/dataset_ref/coco2014/images
         

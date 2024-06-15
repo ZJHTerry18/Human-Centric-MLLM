@@ -1,0 +1,30 @@
+datasets:
+  cihp_parsing_qa:
+    data_type: images
+    vis_processor:
+      common:
+        data_cfg:
+          image_size: [448, 448]
+          mean: [0.48145466, 0.4578275, 0.40821073]
+          std: [0.26862954, 0.26130258, 0.27577711]
+          left_right_pairs: [[13, 14], [15, 16], [17, 18]]
+      train:
+        name: blip2_image_parsing_qa_train
+        data_cfg: 
+          is_flip: True
+          all_parts_list: ["hat", "hair", "glove", "sunglasses", "upperclothes", "dress", "coat", "socks", "pants", "torso skin", "scarf", "skirt", "face", "left arm", "right arm", "left leg", "right leg", "left shoe", "right shoe"]
+      eval:
+        name: blip2_image_parsing_qa_eval
+        data_cfg:
+          all_parts_list: ["hat", "hair", "glove", "sunglasses", "upperclothes", "dress", "coat", "socks", "pants", "torso skin", "scarf", "skirt", "face", "left arm", "right arm", "left leg", "right leg", "left shoe", "right shoe"]
+    text_processor:
+        train:
+          name: "blip2_text_parsing_qa_train"
+        eval:
+          name: "blip2_text_parsing_qa_eval"
+          
+    build_info:
+      image_path: /data/datasets/dataset_parsing/CIHP/instance-level_human_parsing
+      ann_path:
+        train: /data/datasets/dataset_parsing/CIHP/instance-level_human_parsing/CIHP_train_polygon.jsonl
+      template_path: minigpt4/configs/datasets/multitask_qa/parsing/qa_template.json

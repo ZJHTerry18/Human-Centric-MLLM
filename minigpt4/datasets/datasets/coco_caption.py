@@ -88,10 +88,11 @@ class RefCOCOEvalData(torch.utils.data.Dataset):
         data = self.loaded_data[idx]
         img_id = data['img_id']
         sent = data['sents']
-        image_path = os.path.join(self.root_path, f'{img_id[:27]}.jpg')
+        image_path = os.path.join(self.root_path, f'{img_id[:27]}.jpg')#os.path.join(self.root_path, f'{img_id[:27]}.jpg'.split('_')[-1]) for various styles of img_path between json and exact files
         image = Image.open(image_path).convert('RGB')
         image = self.vis_processor(image)
         question = f"[refer] give me the location of {sent}"
+        # question = f"give me the location of {sent}"
         return image, question, img_id
 
 class EvalCaptionData(torch.utils.data.Dataset):
@@ -118,3 +119,37 @@ class EvalCaptionData(torch.utils.data.Dataset):
         image = self.vis_processor(image)
         question = f"[caption] please describe this image?"
         return image, question, image_id
+
+class EvalREGData(torch.utils.data.Dataset):
+    def __init__(self, loaded_data, vis_processor, root_path, res):
+        self.loaded_data = loaded_data
+        self.root_path = root_path
+        self.vis_processor = vis_processor
+        self.res = res
+        self.keys = list(self.loaded_data.keys())
+
+    def __len__(self):
+        return len(self.keys)
+    
+    def bbox_2_str(self, bbox, height, width):
+        bbox[0] = int(bbox[0] / width * self.res)
+        bbox[1] = int(bbox[1] / height * self.res)
+        bbox[2] = int(bbox[2] / width * self.res)
+        bbox[3] = int(bbox[3] / height * self.res)
+
+        return '{' +'<'+ str(bbox[0]) + '>' + '<'+ str(bbox[1]) + '>' + '<'+ str(bbox[2]) + '>' + '<'+ str(bbox[3]) +'>' +'}'
+        
+    def __getitem__(self, idx):
+        key = self.keys[idx]
+        data = self.loaded_data[key]
+        img_id = data['img_id']
+        bbox = data['bbox']
+        image_path = os.path.join(self.root_path, f'{img_id[:27]}.jpg')#os.path.join(self.root_path, f'{img_id[:27]}.jpg'.split('_')[-1]) for various styles of img_path between json and exact files
+        image = Image.open(image_path).convert('RGB')
+        image = self.vis_processor(image)
+        height = data['height']
+        width = data['width']
+        str_bbox = self.bbox_2_str(bbox, height, width)
+        question = f"describe this object in {str_bbox}"
+        return image, question, key
+

@@ -60,7 +60,7 @@ class RunnerBase:
         self._lr_sched = None
 
         self.start_epoch = 0
-
+        self.iters_per_epoch = self.config.run_cfg.get("iters_per_epoch", None)
         # self.setup_seeds()
         self.setup_output_dir()
 
@@ -88,7 +88,8 @@ class RunnerBase:
             if self.use_distributed:
                 if self._wrapped_model is None:
                     self._wrapped_model = DDP(
-                        self._model, device_ids=[self.config.run_cfg.gpu], find_unused_parameters=True
+                        self._model, device_ids=[self.config.run_cfg.gpu], 
+                        find_unused_parameters=True
                     )
             else:
                 self._wrapped_model = self._model
@@ -105,6 +106,7 @@ class RunnerBase:
                 if not p.requires_grad:
                     continue  # frozen weights
                 print(n)
+                # print(p.dtype)
                 if p.ndim < 2 or "bias" in n or "ln" in n or "bn" in n:
                     p_non_wd.append(p)
                 else:
@@ -209,7 +211,10 @@ class RunnerBase:
             batch_sizes = {dataset_name: getattr(self.config.datasets_cfg, dataset_name).batch_size
                            for dataset_name in self.datasets.keys()}
             datasets, batch_sizes = reorg_datasets_by_split(self.datasets, batch_sizes)
-            self.datasets = datasets
+             # to keep the same structure as return value of concat_datasets
+            self.datasets = {
+                k: v[0] if len(v) == 1 else v for k, v in datasets.items()
+            }
             # self.datasets = concat_datasets(datasets)
 
             # print dataset statistics after concatenation/chaining
@@ -249,7 +254,7 @@ class RunnerBase:
             split_names = sorted(self.datasets.keys())
 
             datasets = [self.datasets[split] for split in split_names]
-            batch_sizes = [batch_sizes[split] for split in split_names]
+            batch_sizes = [batch_sizes[split][0] if len(batch_sizes[split]) == 1 else batch_sizes[split] for split in split_names]
             is_trains = [split in self.train_splits for split in split_names]
 
             print("batch sizes", batch_sizes)
@@ -293,6 +298,10 @@ class RunnerBase:
     @property
     def min_lr(self):
         return float(self.config.run_cfg.min_lr)
+    
+    @property
+    def epochs_per_save(self):
+        return int(self.config.run_cfg.get("epochs_per_save", 5))
 
     @property
     def accum_grad_iters(self):
@@ -378,29 +387,30 @@ class RunnerBase:
                 self.log_stats(split_name="train", stats=train_stats)
 
             # evaluation phase
-            if len(self.valid_splits) > 0:
-                for split_name in self.valid_splits:
-                    logging.info("Evaluating on {}.".format(split_name))
+            if self.evaluate_only or (cur_epoch + 1) % self.epochs_per_save == 0 or cur_epoch == 0:
+                if len(self.valid_splits) > 0:
+                    for split_name in self.valid_splits:
+                        logging.info("Evaluating on {}.".format(split_name))
 
-                    val_log = self.eval_epoch(
-                        split_name=split_name, cur_epoch=cur_epoch
-                    )
-                    if val_log is not None:
-                        if is_main_process():
-                            assert (
-                                "agg_metrics" in val_log
-                            ), "No agg_metrics found in validation log."
+                        val_log = self.eval_epoch(
+                            split_name=split_name, cur_epoch=cur_epoch
+                        )
+                        if val_log is not None:
+                            if is_main_process():
+                                assert (
+                                    "agg_metrics" in val_log
+                                ), "No agg_metrics found in validation log."
 
-                            agg_metrics = val_log["agg_metrics"]
-                            if agg_metrics > best_agg_metric and split_name == "val":
-                                best_epoch, best_agg_metric = cur_epoch, agg_metrics
+                                agg_metrics = val_log["agg_metrics"]
+                                if agg_metrics > best_agg_metric and split_name == "val":
+                                    best_epoch, best_agg_metric = cur_epoch, agg_metrics
 
-                                self._save_checkpoint(cur_epoch, is_best=True)
+                                    # if not self.evaluate_only:
+                                    #     self._save_checkpoint(cur_epoch, is_best=True)
 
-                            val_log.update({"best_epoch": best_epoch})
-                            self.log_stats(val_log, split_name)
+                                val_log.update({"best_epoch": best_epoch})
+                                self.log_stats(val_log, split_name)
 
-            else:
                 # if no validation split is provided, we just save the checkpoint at the end of each epoch.
                 if not self.evaluate_only:
                     self._save_checkpoint(cur_epoch, is_best=False)
@@ -444,6 +454,7 @@ class RunnerBase:
             cuda_enabled=self.cuda_enabled,
             log_freq=self.log_freq,
             accum_grad_iters=self.accum_grad_iters,
+            iters_per_epoch=self.iters_per_epoch
         )
 
     @torch.no_grad()

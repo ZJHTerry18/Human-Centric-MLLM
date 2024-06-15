@@ -1,7 +1,13 @@
 datasets:
-
   llava_reason:
     data_type: images
+    vis_processor:
+      train:
+        name: "blip2_image_train"
+        image_size: 448
+    text_processor:
+      train:
+        name: "blip_caption"
     build_info:
-      image_path: /path/to/coco/images
-      ann_path: /path/to/llava/complex_reasoning_77k.json
+      image_path: /data/datasets/dataset_ref/coco2014/images/train
+      ann_path: /data/datasets/instruction_tuning/LLaVA/complex_reasoning_77k.json

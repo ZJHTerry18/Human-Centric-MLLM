@@ -1,0 +1,88 @@
+model:
+  arch: minigpt_v2
+  model_type: pretrain
+  max_txt_len: 500
+  quantize_bins: 100
+  end_sym: "</s>"
+  low_resource: False
+  prompt_template: '[INST] {} [/INST]'
+  llama_model: "pretrained_models/language_models/llama-2-7b-chat"
+  # ckpt: minigpt4/output/HCM_instruction_eva-G_llama2/202402271145/checkpoint_19.pth
+  # ckpt: minigpt4/output/HCM_instruction_eva-G_llama2/202405142148/checkpoint_9.pth # raw caption ablation
+  ckpt: "checkpoints/minigptv2/checkpoint_stage3.pth"
+  lora_r: 64
+  lora_alpha: 16
+  freeze_vit: True
+
+
+datasets:
+  cc_sbu_align:
+    vis_processor:
+      train:
+        name: "blip2_image_eval"
+        image_size: 448
+      # train:
+      #   name: "blip2_image_pose_qa_eval"
+      #   data_cfg:
+      #     mean: [0.48145466, 0.4578275, 0.40821073]
+      #     std: [0.26862954, 0.26130258, 0.27577711]
+      #     # all_keypoint_dict: {0: 'right_shoulder', 1: 'right_elbow', 2: 'right_wrist', 3: 'left_shoulder', 4: 'left_elbow', 5: 'left_wrist', 6: 'right_hip', 7: 'right_knee', 8: 'right_ankle', 9: 'left_hip', 10: 'left_knee', 11: 'left_ankle', 12: 'head_top', 13: 'neck'}
+      #     all_keypoint_dict: {0: 'nose', 1: 'head top', 2: 'neck', 3: 'left eye', 4: 'right eye', 5: 'left ear', 6: 'right ear', 7: 'left shoulder', 8: 'right shoulder', 9: 'left elbow', 10: 'right elbow', 11: 'left wrist', 12: 'right wrist', 13: 'left hip', 14: 'right hip', 15: 'left knee', 16: 'right knee', 17: 'left ankle', 18: 'right ankle'}
+      #     # skeleton : [[12,13], [13,3], [13,0], [0,1], [3,4], [1,2], [4,5], [0,6], [3,9], [6,9], [6,7], [9,10], [7,8], [10,11]]
+      #     skeleton: [[0,1], [0,2], [1,2], [0,3], [0,4], [3,5], [4,6], [3,4], [1,2], [2,7], [2,8], [8,10], [7,9], [10,12], [9,11], [8,14], [7,13], [13,14], [14,16], [13,15], [16,18], [15,17]]
+      #     # sigmas: [
+      #     #         0.01388152, 0.01515228, 0.01057665, 0.01417709, 0.01497891, 0.01402144,
+      #     #         0.03909642, 0.03686941, 0.01981803, 0.03843971, 0.03412318, 0.02415081,
+      #     #         0.01291456, 0.01236173
+      #     #         ]
+      #     sigmas: [
+      #             1.0, 0.01291456, 0.01236173, 1.0, 1.0, 1.0, 1.0, 0.01417709, 0.01388152,
+      #             0.01497891, 0.01515228, 0.01402144, 0.01057665, 0.03843971, 0.03909642, 0.03412318, 0.03686941, 0.02415081, 0.01981803
+      #             ]
+      #     use_area: True
+      #     image_size: [448, 448]
+    text_processor:
+      train:
+        name: "blip_caption"
+
+evaluation_datasets:
+  refaic:
+    eval_file_path: inference_cases/rec/rec_aic_wotaskid.jsonl        
+    max_new_tokens: 500
+    batch_size: 4
+  
+  ref:
+    eval_file_path: inference_cases/knowledge_reference/reg_attr.jsonl
+    max_new_tokens: 500
+    batch_size: 4
+  
+  coco:
+    eval_file_path: inference_cases/hint_detection.jsonl
+    max_new_tokens: 100
+    batch_size: 1
+  
+  vqa:
+    eval_file_path: inference_cases/benchmark_tasks/benchmark_tasks.jsonl
+    max_new_tokens: 500
+    batch_size: 4
+  
+  hcm_qa:
+    eval_file_path: /home/human/data/humanLLM_test_benchmark/questions/multiperson_relation_multichoice.jsonl
+    # eval_file_path: /home/human/data/humanLLM_test_benchmark/questions/multiperson_grounding_bbox.jsonl
+    # eval_file_path: /home/human/data/humanLLM_test_benchmark/questions/part_loc.jsonl
+    # eval_file_path: /home/human/data/VizWiz/Annotations/val.json
+    max_new_tokens: 500
+    batch_size: 4
+
+run:
+  task: image_text_pretrain
+  name: minigptv2_evaluation
+  save_path: output/HCM_free_eval/ablations/prompting
+  dataset_type: multichoice
+  # dataset_type: bbox
+  # dataset_type: multi_bbox
+  # dataset_type: vizwiz
+  
+
+  
+

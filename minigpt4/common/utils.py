@@ -31,11 +31,34 @@ from torchvision.datasets.utils import (
     extract_archive,
 )
 
+IGNORE_INDEX = -100
+DEFAULT_IMAGE_TOKEN = '<ImageHere>'
+DEFAULT_IM_START_TOKEN = "<Img>"
+DEFAULT_IM_END_TOKEN = "</Img>"
+IMAGE_PLACEHOLDER = '<image>'
+PERSON_PLACEHOLDER = '<person>'
+POINTS_PLACEHOLDER = '<points>'
+CLASSES_PLACEHOLDER = '<class>'
+
+VQA_IDENTIFIER = '[vqa]'
+CAPTION_IDENTIFIER = '[caption]'
+GROUNDED_CAPTION_IDENTIFIER = '[grounding]'
+REC_IDENTIFIER = '[refer]'
+REG_IDENTIFIER = '[identify]'
+DETECTION_IDENTIFIER = '[detection]'
+POSE_IDENTIFIER = '[keypoint]'
+PARSING_IDENTIFIER = '[parsing]'
+
+BBOX_TEMPLATE = "{{<{}><{}><{}><{}>}}"
+POINTS_TEMPLATE = "<p>{}</p>{{<{}><{}>}}"
+PARSING_TEMPLATE = "<p>{}</p>{}"
+
+POINT_TOKEN = '[point]'
 
 def now():
     from datetime import datetime
 
-    return datetime.now().strftime("%Y%m%d%H%M")[:-1]
+    return datetime.now().strftime("%Y%m%d%H%M")
 
 
 def is_url(url_or_filename):

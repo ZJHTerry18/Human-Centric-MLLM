@@ -1,0 +1,62 @@
+model:
+  arch: minigpt_v2_pose
+  model_type: pretrain
+  max_txt_len: 1024
+  image_size: 448
+  quantize_bins: 100
+  end_sym: "</s>"
+  llama_model: "pretrained_models/language_models/llama-2-7b-chat"
+  ckpt: "minigpt4/output/Multitask_eva-G_llama2/202312300317/checkpoint_199.pth"
+  use_grad_checkpoint: True
+  chat_template: True
+  lora_r: 64
+  lora_alpha: 16
+  use_vit_adapter: True
+
+  num_keypoints: 19
+  point_loss_alpha: 10.0
+
+datasets:
+  cihp_parsing_qa:
+    task: parsing
+    batch_size: 2
+    build_info:
+      ann_path:
+        val: /data/datasets/dataset_parsing/CIHP/instance-level_human_parsing/CIHP_val_polygon_bbox_1000.jsonl
+      template_path: minigpt4/configs/datasets/multitask_qa/parsing/qa_template_bbox.json
+
+
+run:
+  task: parsing_bbox_eval
+  # optimizer
+  lr_sched: "linear_warmup_cosine_lr"
+  init_lr: 1e-5
+  min_lr: 8e-5
+  warmup_lr: 1e-6
+
+  weight_decay: 0.05
+  max_epoch: 50
+  num_workers: 6
+  warmup_steps: 1000
+  iters_per_epoch: 1000
+
+  seed: 42
+  output_dir: "output/ParsingBoxEval_cihp_eva-G_llama2"
+
+  amp: True
+  resume_ckpt_path: null
+
+  evaluate: True 
+  train_splits: ["train"]
+  valid_splits: ["val"]
+  max_len: 500
+  min_len: 1
+  num_beams: 1
+
+  device: "cuda"
+  world_size: 1
+  dist_url: "env://"
+  distributed: True
+
+  wandb_log: False
+  job_name: multitask_qa
