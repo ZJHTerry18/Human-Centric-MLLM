@@ -14,7 +14,7 @@ By tuning on self-created human-centric annotations, our model can excel in a wi
 ```sh
 pip install torch==2.0.0 torchvision==0.15.1 torchaudio==2.0.1
 ```
-- Install [Flash-attention] (https://github.com/Dao-AILab/flash-attention?tab=readme-ov-file#installation-and-features)
+- Install [Flash-attention](https://github.com/Dao-AILab/flash-attention?tab=readme-ov-file#installation-and-features)
 - Install the required packages:
 ```sh
 pip install -r requirement.txt
