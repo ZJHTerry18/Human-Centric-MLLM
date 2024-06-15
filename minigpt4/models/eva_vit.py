@@ -18,9 +18,6 @@ from timm.models.registry import register_model
 
 from minigpt4.common.dist_utils import download_cached_file
 
-# from minigpt4.models.vit_adapter import SpatialPriorModule, InteractionBlockWithCls, deform_inputs
-# from minigpt4.models.ops.modules import MSDeformAttn
-
 def _cfg(url='', **kwargs):
     return {
         'url': url,
