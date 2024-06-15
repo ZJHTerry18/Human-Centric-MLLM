@@ -20,7 +20,24 @@ pip install torch==2.0.0 torchvision==0.15.1 torchaudio==2.0.1
 pip install -r requirements.txt
 ```
 
+## Dataset Preparations
+TBD
+
 ## Training
+We conduct a two-stage training: The first stage is pre-training on human-centric caption and grounding tasks, and the second stage is instruction tuning on free-style human-centric question-answering pairs.
+
+- Stage 1: Pre-training
+```sh
+CUDA_VISIBLE_DEVICES=<your device numbers> torchrun \
+  --master_port <your port> --nproc_per_node <your process numbers> \
+  train.py --cfg-path train_configs/hcm_multitask/minigptv2_hcm_multitask.yaml
+```
+- Stage 2: Instruction tuning
+```sh
+CUDA_VISIBLE_DEVICES=<your device numbers> torchrun \
+  --master_port <your port> --nproc_per_node <your process numbers> \
+  train.py --cfg-path train_configs/hcm_multitask/minigptv2_hcm_instruct_tuning.yaml
+```
 
 ## Inference
 
