@@ -1,4 +1,4 @@
-# Human-Centric-MLLM
+# Human-Centric-MLLM (HERM)
 A Multimodal Large Language Model on human-centric tasks.
 
 ## Introduction
