@@ -6,9 +6,19 @@ By tuning on self-created human-centric annotations, our model can excel in a wi
 
 <div align=center>
 <img src="./figs/examples.png" alt="overview" style="zoom: 80%">
-<\div>
+</div>
 
 ## Installation
+- Pre-requisites: Python 3.10, CUDA>=11.6 (We used 11.7)
+- Install PyTorch 
+```sh
+pip install torch==2.0.0 torchvision==0.15.1 torchaudio==2.0.1
+```
+- Install [Flash-attention] (https://github.com/Dao-AILab/flash-attention?tab=readme-ov-file#installation-and-features)
+- Install the required packages:
+```sh
+pip install -r requirement.txt
+```
 
 ## Training
 
