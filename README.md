@@ -17,7 +17,7 @@ pip install torch==2.0.0 torchvision==0.15.1 torchaudio==2.0.1
 - Install [Flash-attention](https://github.com/Dao-AILab/flash-attention?tab=readme-ov-file#installation-and-features)
 - Install the required packages:
 ```sh
-pip install -r requirement.txt
+pip install -r requirements.txt
 ```
 
 ## Training
